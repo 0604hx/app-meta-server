@@ -1,0 +1,388 @@
+-- `app-meta`.account definition
+
+CREATE TABLE `account` (
+  `id` varchar(100) NOT NULL,
+  `name` varchar(20) NOT NULL,
+  `did` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- `app-meta`.account_pwd definition
+
+CREATE TABLE `account_pwd` (
+  `id` varchar(100) NOT NULL,
+  `value` varchar(250) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- `app-meta`.app definition
+
+CREATE TABLE `app` (
+  `id` varchar(30) NOT NULL COMMENT '应用唯一编号',
+  `name` varchar(20) NOT NULL COMMENT '应用名称（2到15个字符间）',
+  `abbr` varchar(3) DEFAULT NULL COMMENT '应用简称（1到3个字符）',
+  `active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否生效，0=不生效（前端不展示），1=生效',
+  `category` tinyint(1) NOT NULL DEFAULT '0' COMMENT '应用类型，0=快应用，1=RPA，2=外置应用',
+  `summary` text COMMENT '应用简介（支持 MD 语法）',
+  `launch` int DEFAULT 0 COMMENT '应用执行次数',
+  `mark` int DEFAULT 0 COMMENT '应用收藏次数';
+  `thumb` int DEFAULT 0 COMMENT '应用点赞数';
+  `author` varchar(15) DEFAULT NULL,
+  `uid` varchar(12) DEFAULT NULL COMMENT '录入者ID',
+  `uname` varchar(20) DEFAULT NULL COMMENT '录入者名称',
+  `addOn` bigint DEFAULT NULL COMMENT '录入时间戳',
+  `winFrame` tinyint NOT NULL DEFAULT '1' COMMENT '【窗口设置】是否显示边框',
+  `winMax` tinyint NOT NULL DEFAULT '0' COMMENT '【窗口设置】自动最大化',
+  `winWidth` int DEFAULT '920' COMMENT '【窗口设置】窗口宽度（px）',
+  `winHeight` int DEFAULT '480' COMMENT '【窗口设置】窗口高度（px）',
+  PRIMARY KEY (`id`),
+  KEY `app_category_IDX` (`category`) USING BTREE,
+  KEY `app_uid_IDX` (`uid`) USING BTREE,
+  KEY `app_active_IDX` (`active`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `app_property` (
+  `id` varchar(30) NOT NULL COMMENT '应用唯一编号',
+  `winFrame` tinyint NOT NULL DEFAULT '1' COMMENT '【窗口设置】是否显示边框',
+  `winMax` tinyint NOT NULL DEFAULT '0' COMMENT '【窗口设置】自动最大化',
+  `winWidth` int DEFAULT '920' COMMENT '【窗口设置】窗口宽度（px）',
+  `winHeight` int DEFAULT '480' COMMENT '【窗口设置】窗口高度（px）',
+  `native` int DEFAULT '0' COMMENT '是否需要在原生环境下运行，勾选后，如果在纯 WEB 环境下会报错',
+  PRIMARY KEY (`id`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- `app-meta`.app_version definition
+
+CREATE TABLE `app_version` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `aid` varchar(15) NOT NULL,
+  `pid` varchar(100) DEFAULT NULL COMMENT '关联页面ID',
+  `version` varchar(10) NOT NULL COMMENT 'Y.M.D 格式的版本号',
+  `summary` text,
+  `path` varchar(255) DEFAULT NULL COMMENT '文件保存地址（本地路径或者远程 url）',
+  `size` bigint DEFAULT NULL COMMENT '文件大小',
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `app_version_aid_IDX` (`aid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- `app-meta`.app_account definition
+
+CREATE TABLE `app_role` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `aid` varchar(15) NOT NULL,
+  `uid` varchar(15) NOT NULL,
+  `role` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `app_version_aid_IDX` (`aid`) USING BTREE,
+  KEY `app_version_uid_IDX` (`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- `app-meta`.app_link definition
+
+CREATE TABLE `app_link` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `aid` varchar(15) NOT NULL,
+  `uid` varchar(15) NOT NULL,
+  `type` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `app_version_aid_IDX` (`aid`) USING BTREE,
+  KEY `app_version_uid_IDX` (`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `page` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `aid` varchar(15) NOT NULL,
+  `uid` varchar(15) NOT NULL,
+  `name` varchar(200) DEFAULT '',
+  `active` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否生效，0=不生效（前端不展示），1=生效',
+  `main` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否标记为主页面（每个应用尽有一个主页面）',
+  `serviceAuth` text COMMENT '访问授权，{标识，U为用户，D为部门}|{ID}',
+  `editAuth` text COMMENT '编辑授权，{标识，U为用户，D为部门}|{ID}',
+   `template` varchar(15) NOT NULL DEFAULT 'form',
+   `launch` int DEFAULT 0 COMMENT '页面执行次数',
+   `content` text,
+  `addOn` bigint NULL,
+  PRIMARY KEY (`id`),
+  KEY `aid_IDX` (`aid`) USING BTREE,
+  KEY `uid_IDX` (`uid`) USING BTREE,
+  KEY `search_IDX` (`search`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--ALTER TABLE `app-meta`.page ADD `search` tinyint(1) DEFAULT 1 NULL COMMENT '是否可被检索';
+--ALTER TABLE `app-meta`.page CHANGE `search` `search` tinyint(1) DEFAULT 1 NULL COMMENT '是否可被检索' AFTER main;
+--CREATE INDEX page_search_IDX USING BTREE ON `app-meta`.page (`search`);
+
+CREATE TABLE `page_link` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+  `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID',
+  `uid` varchar(15) DEFAULT NULL,
+  `name` varchar(200) DEFAULT '',
+  `template` varchar(15) NOT NULL DEFAULT '',
+  `active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否生效，0=不生效（前端不展示），1=生效',
+  `weight` int NOT NULL DEFAULT '0' COMMENT '排序值，越大越靠前',
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `data_active_IDX` (`active`) USING BTREE,
+  KEY `data_uid_IDX` (`uid`) USING BTREE,
+  KEY `data_pid_IDX` (`pid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `page_launch` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+  `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID',
+  `uid` varchar(15) DEFAULT NULL,
+  `ip` varchar(100) DEFAULT '',
+  `channel` varchar(20) DEFAULT NULL,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `uid_IDX` (`uid`) USING BTREE,
+  KEY `channel_IDX` (`channel`) USING BTREE,
+  KEY `pid_IDX` (`pid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE image (
+	id int auto_increment NOT NULL,
+	filename varchar(200) NOT NULL,
+	`size` int NULL,
+	ext varchar(10) NULL,
+	`path` varchar(250) NOT NULL,
+	uid varchar(10) NULL,
+	addOn bigint NULL,
+	PRIMARY KEY (id),
+	KEY `form_uid_IDX` (`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `document` (
+	`id` int auto_increment NOT NULL,
+	`filename` varchar(200) NOT NULL,
+	`size` int NULL,
+	`ext` varchar(10) NULL,
+	`path` varchar(250) NOT NULL,
+	`uid` varchar(10) NULL,
+	`aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+    `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID（预留，以后可能用得上）',
+    `summary` varchar(255) NULL,
+    `download` int DEFAULT 0 COMMENT '下载次数',
+	addOn bigint NULL,
+	PRIMARY KEY (id),
+	KEY `form_uid_IDX` (`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `app-meta`.department (
+	id varchar(20) NOT NULL,
+	name varchar(100) NOT NULL,
+	CONSTRAINT department_pk PRIMARY KEY (id)
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- `app-meta`.`data` definition
+
+CREATE TABLE `data` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+  `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID（预留，以后可能用得上）',
+  `uid` varchar(15) DEFAULT NULL,
+  `v` json DEFAULT NULL,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `data_aid_IDX` (`aid`) USING BTREE,
+  KEY `data_uid_IDX` (`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- `app-meta`.`data_block` definition
+
+CREATE TABLE `data_block` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+  `uuid` varchar(200) NOT NULL COMMENT '数据块唯一ID',
+  `text` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `data_aid_IDX` (`aid`, `uuid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `data_batch` (
+   `id` bigint NOT NULL AUTO_INCREMENT,
+   `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+   `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID（预留，以后可能用得上）',
+   `uid` varchar(15) DEFAULT NULL,
+   `batch` varchar(100) DEFAULT NULL,
+   `size` int DEFAULT 0 COMMENT '数据量',
+   `origin` varchar(200) DEFAULT NULL COMMENT '数据源头描述',
+   `active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否生效，0=已删除，1=有效',
+   `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `data_batch_aid_IDX` (`aid`, `pid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 网页机器人执行结果记录
+
+CREATE TABLE `data_robot` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+  `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID（预留，以后可能用得上）',
+  `uid` varchar(15) DEFAULT NULL,
+  `ip` varchar(100) DEFAULT NULL,
+  `startOn` bigint DEFAULT 0,
+  `used` int DEFAULT 0 COMMENT '运行总时间，单位秒',
+  `chrome` varchar(100) DEFAULT NULL,
+  `os` varchar(100) DEFAULT NULL,
+  `params` TEXT,
+  `origin` TEXT,
+  `logs` TEXT,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `data_aid_IDX` (`aid`) USING BTREE,
+  KEY `data_uid_IDX` (`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `notice` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `uid` varchar(15) DEFAULT NULL,
+  `uname` varchar(200) DEFAULT '',
+  `mode` varchar(10) DEFAULT 'notice' COMMENT '展示类型，notice=平铺显示、dialog=弹窗显示',
+  `name` varchar(200) DEFAULT '',
+  `serviceAuth` text,
+  `fromDate` varchar(10) DEFAULT '',
+  `toDate` varchar(10) DEFAULT '',
+  `summary` text,
+  `launch` int DEFAULT 0 COMMENT '投放次数',
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `notice_line` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `uid` varchar(15) DEFAULT NULL,
+  `oid` bigint DEFAULT NULL,
+  `doneOn` bigint DEFAULT NULL,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `oid_IDX` (`oid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `terminal_log` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
+  `uid` varchar(15) DEFAULT NULL,
+  `method` varchar(10) DEFAULT '',
+  `url` varchar(255) DEFAULT '',
+  `code` int DEFAULT 0,
+  `summary` text,
+  `used` bigint DEFAULT NULL,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `aid_IDX` (`aid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `member` (
+  `id` varchar(30) NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
+  `ids` varchar(255) NOT NULL COMMENT '授权用户ID',
+  `secret` varchar(32) DEFAULT '',
+  `expire` int DEFAULT 0,
+  `summary` text,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `dbm_source` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) DEFAULT NULL,
+  `summary` text,
+  `type` varchar(100) NOT NULL COMMENT '数据库类型',
+  `host` varchar(100) DEFAULT '',
+  `port` int DEFAULT -1,
+  `username` varchar(100) DEFAULT '',
+  `pwd` varchar(100) DEFAULT '',
+  `db` varchar(100) DEFAULT '',
+  `encoding` varchar(100) DEFAULT 'utf-8',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `dbm_auth` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) DEFAULT NULL,
+  `uid` varchar(100) NOT NULL,
+  `sourceId` int DEFAULT -1,
+  `allow` varchar(100) DEFAULT '' COMMENT '授权详情，可选值：SQL、C、U、R、D，多个值用英文逗号隔开',
+  `summary` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `dbm_auth_un` (`sourceId`,`uid`),
+  KEY `uid_IDX` (`uid`) USING BTREE,
+  KEY `sid_IDX` (`sourceId`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `dbm_log` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `uid` varchar(100) NOT NULL,
+  `sourceId` int DEFAULT -1,
+  `name` varchar(100) DEFAULT NULL,
+  `action` varchar(100) DEFAULT NULL,
+  `target` varchar(150) DEFAULT NULL,
+  `ps` text COMMENT '参数（对于 action=sql 则是 SQL 语句）',
+  `used` int DEFAULT NULL COMMENT '耗时，单位 ms',
+  `summary` text,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `uid_IDX` (`uid`) USING BTREE,
+  KEY `sid_IDX` (`sourceId`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `api` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pid` bigint DEFAULT NULL,
+  `uid` varchar(15) NOT NULL,
+  `name` varchar(200) DEFAULT '',
+  `launch` int DEFAULT 0 COMMENT '页面执行次数',
+  PRIMARY KEY (`id`),
+  KEY `pid_IDX` (`pid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `api_detail` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `uid` varchar(15) NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否生效，0=不生效（前端不展示），1=生效',
+  `serviceAuth` text COMMENT '访问授权，{标识，U为用户，D为部门}|{ID}',
+  `editAuth` text COMMENT '编辑授权，{标识，U为用户，D为部门}|{ID}',
+  `summary` text,
+  `params` text,
+  `sourceId` bigint DEFAULT NULL,
+  `cmd` text,
+   `resultType` varchar(15) NOT NULL DEFAULT 'Object',
+  `addOn` bigint NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+--CREATE TABLE `data_column` (
+--  `id` int NOT NULL AUTO_INCREMENT,
+--  `aid` varchar(15) NOT NULL,
+--  `uid` varchar(15) NOT NULL,
+--  `value` text NOT NULL COMMENT 'JSON格式的数据列',
+--  `addOn` bigint DEFAULT NULL,
+--  PRIMARY KEY (`id`),
+--  KEY `app_version_aid_IDX` (`aid`) USING BTREE
+--) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+--
+--CREATE TABLE `data_filter` (
+--  `id` int NOT NULL AUTO_INCREMENT,
+--  `aid` varchar(15) NOT NULL,
+--  `uid` varchar(15) NOT NULL,
+--  `value` text NOT NULL COMMENT 'JSON格式的筛选条件',
+--  `summary` text DEFAULT NULL,
+--  `addOn` bigint DEFAULT NULL,
+--  PRIMARY KEY (`id`),
+--  KEY `app_version_aid_IDX` (`aid`) USING BTREE
+--) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -1,0 +1,9 @@
+logging:
+  level:
+    org.appmeta: DEBUG
+    org.nerve: DEBUG
+
+app:
+  res-zip-check: true
+  sys:
+    enableJar: true

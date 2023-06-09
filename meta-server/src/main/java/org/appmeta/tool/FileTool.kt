@@ -1,0 +1,92 @@
+package org.appmeta.tool
+
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.RandomAccessFile
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+
+
+/*
+ * @project app-meta-server
+ * @file    org.appmeta.tool.FileTool
+ * CREATE   2023年02月10日 15:46 下午
+ * --------------------------------------------------------------
+ * 0604hx   https://github.com/0604hx
+ * --------------------------------------------------------------
+ */
+
+object FileTool {
+
+    /**
+     * 向文件指定位置中插入内容
+     */
+    fun injectText(file: File, position:Long, text:String) {
+        RandomAccessFile(file, "rw").use { random->
+            random.seek(position)
+
+            val builder = StringBuilder()
+            val bs = ByteArray(1024)
+
+            var len: Int
+            while (random.read(bs).also { len = it } != -1) {
+                builder.append(String(bs, 0, len))
+            }
+
+            random.seek(position)
+            random.write(text.toByteArray())
+            random.write(builder.toString().toByteArray())
+        }
+    }
+
+
+    const val UNZIP_OVERWRITE       = 0     //覆盖旧文件
+    const val UNZIP_SKIP_ON_EXIST   = 1     //如果目标文件存在则跳过
+
+    /**
+     * 将压缩包解压到指定目录
+     * 注意：需手动删除源目录
+     */
+    fun unzip(zipFile:File, target: Path, type:Int = UNZIP_OVERWRITE):List<String> {
+        if(!Files.exists(target))
+            Files.createDirectories(target)
+        else {
+            if(!Files.isDirectory(target))
+                throw RuntimeException("$target 必须是目录")
+        }
+
+        ZipInputStream(FileInputStream(zipFile)).use { zipIs->
+            val trace = mutableListOf<String>()
+            val targetFolder = target.toFile()
+
+            var entry: ZipEntry? = zipIs.nextEntry
+            while(entry!=null){
+                val file = File(targetFolder, entry.name)
+                if(!file.parentFile.exists())   file.parentFile.mkdirs()
+
+                if(type == UNZIP_SKIP_ON_EXIST && file.exists()){
+                    trace.add("[ SKIP] $file")
+                }
+                else{
+                    trace.add("[WRITE] $file")
+
+                    if(entry.isDirectory)
+                        file.mkdir()
+                    else{
+                        val fileOut = FileOutputStream(file)
+                        fileOut.write(zipIs.readBytes())
+                        fileOut.close()
+                    }
+                }
+
+                zipIs.closeEntry()
+                entry = zipIs.nextEntry
+            }
+
+            return trace
+        }
+    }
+}
