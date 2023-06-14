@@ -1,32 +1,27 @@
 <div align=center>
 <h1>🎉 应用元宇宙 / APP META 🎉</h1>
 
-![Language](https://img.shields.io/github/languages/top/0604hx/app-meta-server?logo=javascript&color=blue)
+![Language](https://img.shields.io/github/languages/top/0604hx/app-meta-server?logo=java&color=purple)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![LastCommit](https://img.shields.io/github/last-commit/0604hx/app-meta-server?color=blue&logo=github)
 
 </div>
 
 ```text
- _______  _______  _______    __   __  _______  _______  _______    _______  _______  ______    __   __  _______  ______
-|   _   ||       ||       |  |  |_|  ||       ||       ||   _   |  |       ||       ||    _ |  |  | |  ||       ||    _ |
-|  |_|  ||    _  ||    _  |  |       ||    ___||_     _||  |_|  |  |  _____||    ___||   | ||  |  |_|  ||    ___||   | ||
-|       ||   |_| ||   |_| |  |       ||   |___   |   |  |       |  | |_____ |   |___ |   |_||_ |       ||   |___ |   |_||_
-|       ||    ___||    ___|  |       ||    ___|  |   |  |       |  |_____  ||    ___||    __  ||       ||    ___||    __  |
-|   _   ||   |    |   |      | ||_|| ||   |___   |   |  |   _   |   _____| ||   |___ |   |  | | |     | |   |___ |   |  | |
-|__| |__||___|    |___|      |_|   |_||_______|  |___|  |__| |__|  |_______||_______||___|  |_|  |___|  |_______||___|  |_|
+ _______  _______  _______    __   __  _______  _______  _______ 
+|   _   ||       ||       |  |  |_|  ||       ||       ||   _   |
+|  |_|  ||    _  ||    _  |  |       ||    ___||_     _||  |_|  |
+|       ||   |_| ||   |_| |  |       ||   |___   |   |  |       |
+|       ||    ___||    ___|  |       ||    ___|  |   |  |       |
+|   _   ||   |    |   |      | ||_|| ||   |___   |   |  |   _   |
+|__| |__||___|    |___|      |_|   |_||_______|  |___|  |__| |__|
 ```
 
 > 基于 [SpringBoot3](https://spring.io/projects/spring-boot) + [VUE3](https://cn.vuejs.org/) + [Naive UI](https://www.naiveui.com) + [Electron](https://www.electronjs.org) 应用快速开发、发布平台，旨在帮助使用者（包含但不限于开发人员、业务人员）快速响应业务需求，此仓库为后端，前端仓库详见[app-meta](https://github.com/0604hx/app-meta)。
 
+[如何使用/二次开发](about/本地运行及二次开发.md)
+
 ## 附录
-
-### 二次开发
-> Spring Boot 3 至少需要 JDK 17，若您的 JDK 不在此范围，请先升级
-
-#### 如何打包
-
-在根目录执行 `mvn package -pl meta-server -am -amd`（windows 平台可直接使用 `pacage.bat`）
 
 ### 工具库
 
