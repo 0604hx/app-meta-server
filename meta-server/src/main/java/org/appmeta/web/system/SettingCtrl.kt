@@ -2,7 +2,6 @@ package org.appmeta.web.system
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import org.appmeta.component.SettingChangeEvent
-import org.appmeta.service.SystemAsync
 import org.nerve.boot.module.setting.Setting
 import org.nerve.boot.module.setting.SettingMapper
 import org.nerve.boot.web.ctrl.BaseController

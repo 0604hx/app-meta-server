@@ -46,6 +46,9 @@ class AppConfig {
 @Configuration
 @ConfigurationProperties(prefix = "app.sys")
 class SystemConfig{
+    var adminId         = "admin"           //初始化的管理员ID
+    var adminName       = "超级管理员"
+
     var enableJar       = false             //是否开启 JAR 更新功能
     var jarName         = "meta-server-1.0.jar"
     var logFile         = "logs/spring.log"

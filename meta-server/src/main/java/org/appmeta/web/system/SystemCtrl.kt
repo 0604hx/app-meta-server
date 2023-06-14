@@ -4,11 +4,9 @@ import jakarta.annotation.Resource
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.input.ReversedLinesFileReader
-import org.appmeta.AppMetaServer
-import org.appmeta.H
-import org.appmeta.Role
-import org.appmeta.S
+import org.appmeta.*
 import org.appmeta.component.SystemConfig
+import org.appmeta.model.FieldModel
 import org.appmeta.model.SizeModel
 import org.nerve.boot.Const.COMMA
 import org.nerve.boot.domain.AuthUser
@@ -17,16 +15,18 @@ import org.nerve.boot.module.setting.SettingService
 import org.nerve.boot.util.DateUtil
 import org.nerve.boot.web.ctrl.BasicController
 import org.slf4j.LoggerFactory
+import org.springframework.cache.caffeine.CaffeineCache
+import org.springframework.cache.caffeine.CaffeineCacheManager
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.util.Assert
+import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.io.BufferedInputStream
 import java.io.BufferedWriter
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
-import java.io.RandomAccessFile
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
@@ -102,42 +102,6 @@ class SystemCtrl(private val helper: SystemHelper, private val sysConfig:SystemC
         方式二：
         Files.copy(file.inputStream, newFile, StandardCopyOption.REPLACE_EXISTING)
          */
-//        RandomAccessFile(jarFile.toFile(), "rws").use { f->
-//            val fis = BufferedInputStream(file.inputStream)
-//            val buffer = ByteArray(10*1024*1024)
-//            var len: Int
-//            val total = file.size
-//            var current = 0
-//
-//            while (
-//                run {
-//                    len = fis.read(buffer)
-//                    len
-//                } != -1
-//            ) {
-//                current += len
-//                logger.info("[COPY] %-10d / %-10d (READ %-8d)".format(current, total, len))
-//                f.write(buffer, 0, len)
-//            }
-//
-//            f.channel.close()
-//            /*
-//            写入到更新日志文件中
-//             */
-//            FileOutputStream(sysConfig.verLogOfJar, true).use { logFOS->
-//                BufferedWriter(OutputStreamWriter(logFOS, Charsets.UTF_8)).use { bw->
-//                    bw.newLine()
-//
-//                    val line = "%s %-8s %s".format(DateUtil.getDateTime(), user.id, "${file.size/1024}KB")
-//                    bw.write(line)
-//
-//                    logger.info("追加到更新日志 ${sysConfig.verLogOfJar}：$line")
-////                    re.data = line
-//                }
-//            }
-//
-//            logger.info("${user.showName} 更新 JAR 包到 ${sysConfig.jarName}")
-//        }
         FileOutputStream(jarFile.toFile()).use { f->
             val fis = BufferedInputStream(file.inputStream)
             val buffer = ByteArray(10*1024*1024)
@@ -197,5 +161,35 @@ class SystemCtrl(private val helper: SystemHelper, private val sysConfig:SystemC
             ReversedLinesFileReader(p, Charsets.UTF_8).use { it.readLines(model.size) }
         else
             throw Exception("版本记录文件 ${sysConfig.verLogOfJar} 不存在")
+    }
+}
+
+@RestController
+@RequestMapping("system/cache")
+class CacheCtrl(private val cacheManager:CaffeineCacheManager):BasicSystemCtrl() {
+
+    @RequestMapping("list", name = "缓存列表")
+    fun list() = resultWithData {
+        cacheManager.cacheNames.map { name->
+            mapOf(
+                F.NAME      to name,
+                "size"      to (cacheManager.getCache(name) as CaffeineCache).nativeCache.estimatedSize()
+            )
+        }
+    }
+
+    @RequestMapping("clean", name = "清空指定缓存")
+    fun clean(@RequestBody model:FieldModel) = resultWithData {
+        model.key.split(COMMA).map { it.trim() }.onEach { n->
+            cacheManager.getCache(n)?.let {
+                val id = model.id.toString()
+                if(StringUtils.hasText(id))
+                    it.evict(id)
+                else
+                    it.clear()
+
+                logger.info("清除 NAME=${n} 的缓存（ID=${model.id}）...")
+            }
+        }
     }
 }

@@ -5,7 +5,6 @@ import org.appmeta.Caches
 import org.appmeta.F
 import org.appmeta.component.AppConfig
 import org.nerve.boot.db.service.BaseService
-import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.util.AESProvider
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable

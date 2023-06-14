@@ -3,6 +3,9 @@ logging:
     org.appmeta: DEBUG
     org.nerve: DEBUG
 
+nerve:
+  init: true
+
 app:
   res-zip-check: true
   sys:

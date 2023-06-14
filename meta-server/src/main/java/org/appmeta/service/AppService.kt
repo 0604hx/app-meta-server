@@ -241,7 +241,7 @@ class AppVersionService(private val config:AppConfig, private val settingService
 class AppService(
     private val refresh: CacheRefresh,
     private val cfg: AppConfig,
-    private val formM:FormMapper, private val propertyM:AppPropertyMapper) : BaseService<AppMapper, App>() {
+    private val propertyM:AppPropertyMapper) : BaseService<AppMapper, App>() {
 
     fun detailOf(id:String): Map<String, Any> {
         val app = getById(id)?: throw ServiceException("应用#${id}不存在")

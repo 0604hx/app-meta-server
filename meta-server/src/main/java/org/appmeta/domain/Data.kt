@@ -10,7 +10,6 @@ import org.apache.ibatis.mapping.ResultSetType
 import org.apache.ibatis.session.ResultHandler
 import org.apache.ibatis.type.JdbcType
 import org.nerve.boot.annotation.CN
-import org.nerve.boot.db.Table
 
 /*
  * @project app-meta-server

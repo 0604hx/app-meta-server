@@ -18,7 +18,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jackson:
     # 序列化时忽略 null 的属性
-    default-property-inclusion: non_null
+#    default-property-inclusion: non_null
 
 nerve:
   init: false
@@ -56,6 +56,9 @@ nerve:
     caches:
       PAGE_LIST: maximumSize=100,expireAfterWrite=10m
       NOTICE_LIST: maximumSize=1,expireAfterWrite=120m
+  # 备份功能
+  backup:
+    enable: false
 
 mybatis-plus:
   global-config:

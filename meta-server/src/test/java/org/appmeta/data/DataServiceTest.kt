@@ -1,12 +1,7 @@
 package org.appmeta.data
 
-import com.apifan.common.random.source.AreaSource
-import com.apifan.common.random.source.DateTimeSource
-import com.apifan.common.random.source.EducationSource
+import com.apifan.common.random.source.*
 import com.apifan.common.random.source.InternetSource.getInstance
-import com.apifan.common.random.source.NumberSource
-import com.apifan.common.random.source.OtherSource
-import com.apifan.common.random.source.PersonInfoSource
 import jakarta.annotation.Resource
 import org.apache.commons.lang3.RandomUtils
 import org.appmeta.AppTest

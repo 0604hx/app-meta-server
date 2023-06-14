@@ -8,7 +8,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils
 import org.appmeta.F
 import org.appmeta.H
 import org.appmeta.Role
-import org.appmeta.domain.RobotLog
 import org.appmeta.model.DataModel.Companion.CREATE
 import org.appmeta.model.DataModel.Companion.DELETE
 import org.appmeta.model.DataModel.Companion.READ
@@ -27,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URLDecoder
-import java.util.Base64
+import java.util.*
 
 class UseSQLException(val msg:String="该功能暂未支持，请使用 SQL 方式"):RuntimeException(msg)
 

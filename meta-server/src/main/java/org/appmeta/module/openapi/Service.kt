@@ -8,6 +8,9 @@ import io.jsonwebtoken.lang.Assert
 import org.appmeta.Caches
 import org.appmeta.F
 import org.appmeta.model.QueryModel
+import org.appmeta.module.dbm.DatabaseService
+import org.appmeta.module.dbm.DatabaseSourceService
+import org.appmeta.module.dbm.DbmModel
 import org.appmeta.tool.AuthHelper
 import org.nerve.boot.db.service.BaseService
 import org.nerve.boot.domain.AuthUser
@@ -28,6 +31,8 @@ import java.io.Serializable
 
 @Service
 class ApiService(
+    private val sourceService: DatabaseSourceService,
+    private val dbService: DatabaseService,
     private val authHelper: AuthHelper,
     private val detailM:ApiDetailMapper) : BaseService<ApiMapper, Api>() {
 
@@ -64,7 +69,7 @@ class ApiService(
 
     private fun error(api: Api, msg:String):Nothing = throw Exception("${api}$msg")
 
-    fun call(user: AuthUser, id:Long, ps:Map<String, Any>): List<Any> {
+    fun call(user: AuthUser, id:Long, ps:Map<String, Any>): List<*> {
         val api = baseMapper.withCache(id) ?: throw Exception("开放接口 #$id 不存在")
         return call(user, api, ps)
     }
@@ -79,7 +84,7 @@ class ApiService(
      * 7. 按照 `resultType` 封装结果并返回
      * 8. `launch` +1 并记录日志
      */
-    fun call(user:AuthUser, api: Api, ps:Map<String, Any>):List<Any> {
+    fun call(user:AuthUser, api: Api, ps:Map<String, Any>):List<*> {
         val detail = detailM.withCache(api.id) ?:   error(api, "尚未完善")
 
         if(!detail.active)                          error(api, "尚未开放")
@@ -113,7 +118,16 @@ class ApiService(
             }
         }
         else{
-            error(api, "暂不支持其他数据源")
+            // 指定了 DataBaseSource 时，调用相应的模块
+            val source = sourceService.withCache(detail.sourceId!!)?: error(api, "数据源#${detail.sourceId} 未定义")
+            val dbmResult = dbService.runSQL(DbmModel().also {
+                it.sourceId = source.id
+                it.batch = false
+                it.action = DbmModel.SQL
+                it.sql = sql
+            })
+
+            dbmResult as List<*>
         }.also {
             api.launch += 1
             updateById(api)

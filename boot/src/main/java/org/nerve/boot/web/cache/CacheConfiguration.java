@@ -41,7 +41,7 @@ public class CacheConfiguration extends CachingConfigurerSupport {
 
 	@Bean
 	@Override
-	public CacheManager cacheManager() {
+	public CaffeineCacheManager cacheManager() {
 		CaffeineCacheManager cacheManager = new CaffeineCacheManager();
 		if (!CollectionUtils.isEmpty(cacheProperties.getCacheNames())) {
 			cacheManager.setCacheNames(cacheProperties.getCacheNames());

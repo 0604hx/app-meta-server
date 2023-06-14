@@ -11,7 +11,6 @@ import org.appmeta.domain.*
 import org.appmeta.model.*
 import org.nerve.boot.Const.COMMA
 import org.nerve.boot.db.service.BaseService
-import org.nerve.boot.db.service.QueryHelper
 import org.nerve.boot.exception.ServiceException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

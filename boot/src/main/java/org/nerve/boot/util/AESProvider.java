@@ -98,21 +98,4 @@ public class AESProvider {
     public String getKey(){
         return this.key;
     }
-
-    public static void main(String[] args) {
-        AESProvider provider = new AESProvider();
-        String aesKey = provider.creatKey();
-        System.out.println("KEY="+aesKey);
-        for (int i = 0; i < aesKey.length(); i++) {
-            System.out.print(((int) aesKey.charAt(i))+", ");
-        }
-        System.out.println();
-        //加密
-        System.out.println(provider.encrypt("abc", aesKey));
-        System.out.println(provider.encrypt("abc"));
-        System.out.println(provider.encrypt("你好"));
-        System.out.println(provider.encrypt("ADMIN_@!123qwe&QQB...t><"));
-
-        System.out.println(provider.decrypt("z/0/AtjLH2hAvls1CHC1Og==","xz1jJN0COgtJdd3p"));
-    }
 }

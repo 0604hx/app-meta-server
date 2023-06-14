@@ -26,7 +26,7 @@ import java.net.URLEncoder
 class DataCtrl(private val appRoleS: AppRoleService,private val service: DataService, private val mapper:DataMapper):BasicController() {
 
     private fun _detectRole(model: DataModel) {
-        val user = authHolder.get()
+//        val user = authHolder.get()
         /*
         权限规则待定，2023-03-16
 

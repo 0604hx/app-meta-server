@@ -16,7 +16,7 @@ import org.appmeta.domain.Page
 
 class PageResultModel(val app: App?, val page:Page?)
 
-class UserResultModel(val id:String, val name:String?, val ip:String?, val depart: Department?)
+class UserResultModel(val id:String, val name:String?, val ip:String?, val depart: Department?, val roles:List<String>?)
 
 class WelcomeResultModel(val settings:Map<String, Any>, val user:Any?)
 

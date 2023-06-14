@@ -49,32 +49,30 @@ class IndexCtrl(
         "${DateUtil.getDateTime()} (RUN ON $started)"
     }
 
-    @PostMapping("whoami", name = "当前登录信息")
-    fun whoami() = resultWithData {
-        val user = authHolder.get()
+    // authHolder 未被注入，故直接通过 JWT token 获取用户信息
+    private fun _buildUserBean() = userLoader.from(request.getHeader(authConfig.tokenName)).let { user->
+        if(user == null)    return@let null
+
         UserResultModel(
             user.id,
             user.name,
             user.ip,
-            if(user != null && StringUtils.hasText(user.id)){
-                departmentM.loadByUser(user.id)
-            }
-            else
-                null
+            if(StringUtils.hasText(user.id)) departmentM.loadByUser(user.id) else null,
+            user.roles
         )
     }
 
+    @PostMapping("whoami", name = "当前登录信息")
+    fun whoami() = resultWithData { _buildUserBean() }
+
     @PostMapping("welcome", name = "公共配置")
     fun welcome() = resultWithData {
-        // authHolder 未被注入，故直接通过 JWT token 获取用户信息
-        val user = userLoader.from(request.getHeader(authConfig.tokenName))
-
         WelcomeResultModel(
             settingS.loadByCategory(S.COMMON.name)
                 .associate {
                     Pair(it.id.lowercase().replaceFirst("com_", EMPTY), it.content)
                 },
-            user
+            _buildUserBean()
         )
     }
 
