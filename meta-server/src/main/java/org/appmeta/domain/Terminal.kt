@@ -28,6 +28,7 @@ class Terminal {
         const val LANG_NODE = "node"
         const val LANG_JAVA = "java"
     }
+    var pid     = ""
 
     var mode    = INSIDE
     var language= ""

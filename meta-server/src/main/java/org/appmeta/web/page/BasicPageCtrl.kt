@@ -34,20 +34,30 @@ open class BasicPageCtrl : BasicController() {
     /**
      * 判断是否具备指定页面的访问权限
      */
-    protected fun _checkServiceAuth(pageId: Serializable, worker:(Page, AuthUser)->Any?): Result {
+    protected fun _checkServiceResult(pageId: Serializable, worker:(Page, AuthUser)->Any?): Result =
+        _checkServiceAuth(pageId) { page, user ->
+            resultWithData { worker(page, user) }
+        }
+
+    protected fun _checkEditResult(pageId: Serializable, worker:(Page, AuthUser)->Any?): Result =
+        _checkEditAuth(pageId) { page, user ->
+            resultWithData { worker(page, user) }
+        }
+
+    protected fun <R> _checkServiceAuth(pageId: Serializable, worker: (Page, AuthUser) -> R):R {
         val page = _loadPage(pageId)
         val user = authHolder.get()
         if(authHelper.checkService(page, user))
-            return resultWithData { worker(page, user) }
+            return worker(page, user)
 
         throw Exception(HttpStatus.UNAUTHORIZED.name)
     }
 
-    protected fun _checkEditAuth(pageId: Serializable, worker:(Page, AuthUser)->Any?): Result {
+    protected fun <R> _checkEditAuth(pageId: Serializable, worker:(Page, AuthUser)->R): R {
         val page = _loadPage(pageId)
         val user = authHolder.get()
         if(authHelper.checkEdit(page, user))
-            return resultWithData { worker(page, user) }
+            return worker(page, user)
 
         throw Exception(HttpStatus.UNAUTHORIZED.name)
     }

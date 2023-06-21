@@ -36,3 +36,4 @@
 [sofa-ark](https://github.com/sofastack/sofa-ark)| SOFAArk 是一款基于 Java 实现的动态热部署和轻量级类隔离框架，由蚂蚁集团开源贡献，主要提供应用模块的动态热部署和类隔离能力。基于 Fat Jar 技术，可以将多个应用模块打包成一个自包含可运行的 Fat Jar，应用既可以是简单的单模块 Java 应用也可以是 SpringBoot/SOFABoot 应用 |用于动态部署 Java 类后端服务？
 [NuProcess](https://github.com/brettwooldridge/NuProcess)| Low-overhead, non-blocking I/O, external Process implementation for Java |执行系统命令
 [zt-exec](https://github.com/zeroturnaround/zt-exec)|ZeroTurnaround Process Executor|执行系统命令
+[LiteFlow](https://github.com/dromara/liteflow)|一个轻量且强大的国产规则引擎框架，可用于复杂的组件化业务的编排领域，独有的DSL规则驱动整个复杂业务，并可实现平滑刷新热部署，支持多种脚本语言规则的嵌入

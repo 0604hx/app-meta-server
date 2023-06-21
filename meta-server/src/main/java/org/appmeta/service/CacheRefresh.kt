@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component
 class CacheRefresh {
     private val  logger = LoggerFactory.getLogger(javaClass)
 
+    @CacheEvict(Caches.AUTH_USER)
+    fun authUser(id:String) {}
+
     @CacheEvict(Caches.APP)
     fun app(id:String){}
 

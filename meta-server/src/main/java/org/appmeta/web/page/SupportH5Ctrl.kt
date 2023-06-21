@@ -27,7 +27,7 @@ class SupportH5Ctrl(
     private val config:AppConfig) : BasicPageCtrl() {
 
     @PostMapping("deploy", name = "更新前端资源")
-    fun deploy(@RequestPart("file") file: MultipartFile, version: AppVersion) = _checkEditAuth(version.pid) { page, user->
+    fun deploy(@RequestPart("file") file: MultipartFile, version: AppVersion) = _checkEditResult(version.pid) { _, user->
         version.uid = user.id
 
         opLog("部署前端资源#${version.aid} ${version.version} ${version.summary}", version, Operation.IMPORT)

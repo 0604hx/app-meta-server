@@ -17,10 +17,12 @@ import org.nerve.boot.Const.EMPTY
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
+import org.springframework.util.StringUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.notExists
 
 @Component
@@ -32,9 +34,11 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
 
     override fun name() = "[LOCAL-PM2-DEPLOYER]"
 
+    private fun getRootDir(id:String) = Paths.get(config.terminalPath, id)
+
     private fun callPM2(vararg cmd:String): Pair<Int, String?> {
         val pm = OSTool.runCmd(listOf(CMD, * cmd))
-        if(logger.isDebugEnabled)   logger.debug("${name()} 执行命令「 ${cmd.joinToString(" ")}」  CODE=${pm.first} MSG=${pm.second}")
+        if(logger.isDebugEnabled)   logger.debug("${name()} 执行命令 [${cmd.joinToString(" ")}]  CODE=${pm.first} MSG=${pm.second}")
         if(pm.first != 0) throw Exception("${name()} 执行出错 ${pm.second}")
         return pm
     }
@@ -55,7 +59,7 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
     override fun deploy(id:String, codeFile: File, terminal: Terminal) {
         if(terminal.mode == Terminal.OUTSIDE)   throw Exception("应用「${id}」部署方式需设置为 ${Terminal.INSIDE}")
 
-        val dir = Paths.get(config.terminalPath, id)
+        val dir = getRootDir(id)
         if(Files.notExists(dir))
             Files.createDirectories(dir)
 
@@ -94,7 +98,7 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
                     """
                     module.exports = {
                     	apps:[{
-                    		name: "$id(${terminal.port})",
+                    		name: "$id", //PORT=${terminal.port}
                     		script:"$script",
                     		exec_interpreter:"${if(terminal.language == LANG_NODE) LANG_NODE else EMPTY}",
                     		args:"${terminal.args}"
@@ -122,7 +126,20 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
         if(pm2.first != 0)  throw Exception("${name()} 启动应用「$id」服务出错：${pm2.second}")
     }
 
-    override fun restart(id: String) = callPM2("restart", id).first == 0
+    override fun restart(id: String) {
+        try{
+            callPM2("restart", id)
+        }
+        catch (e:Exception){
+            //尝试启动
+            getRootDir(id).let { root->
+                logger.info("${name()} 重启应用#$id 失败，尝试执行 start 命令...")
+                val r = OSTool.runCmd(listOf(CMD, "start", config.terminalStart), root.toFile())
+                if(r.first != 0)  throw Exception("${name()} 执行重启失败后尝试直接启动应用「$id」出错：${r.second}")
+                logger.info("${name()} 启动应用#${id} 成功 ^.^")
+            }
+        }
+    }
 
     override fun stop(id: String) = callPM2("stop", id).first == 0
 
@@ -134,6 +151,13 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
         FileUtils.deleteDirectory(dir.toFile())
         logger.info("${name()} 删除应用服务（$dir）")
     }
+
+//    override fun detail(id: String): Map<String, Any> {
+//        val pm2 = callPM2("describe", id)
+//        if(pm2.first != 0)  throw Exception("${name()} 执行出错 ${pm2.second}")
+//        println(pm2.second)
+//        return mapOf()
+//    }
 
     /**
      *     var pid         = 0         //进程ID

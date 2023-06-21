@@ -28,7 +28,7 @@ class SupportRobotCtrl(private val settingS:SettingService, private val mapper:R
 
     @PostMapping("save", name = "保存机器人运行记录")
     fun save(@RequestBody log:RobotLog) = if(settingS.booleanValue(S.SYS_ROBOT_TRACE, true))
-        _checkServiceAuth(log.pid) { _, user ->
+        _checkServiceResult(log.pid) { _, user ->
             log.uid = user.id
             log.addOn = System.currentTimeMillis()
             log.ip = requestIP

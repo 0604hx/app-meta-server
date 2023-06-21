@@ -95,7 +95,7 @@ public class UserAuthRecognizerImpl implements UserAuthRecognizer {
         List<String> roles = new ArrayList<>();
         try {
             final RoleLink link = loadRoleLink(user);
-            if(link != null)
+            if(link != null && StringUtils.isNotEmpty(StringUtils.trim(link.getRoles())))
                 Collections.addAll(roles, link.getRoles().split(COMMA));
         } catch (Exception e) {}
         return roles;

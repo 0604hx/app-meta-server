@@ -1,11 +1,14 @@
 package org.appmeta.web.system
 
+import com.alibaba.fastjson2.JSON
 import org.appmeta.S
 import org.appmeta.domain.Account
 import org.appmeta.model.FieldModel
 import org.appmeta.model.IdStringModel
 import org.appmeta.model.QueryModel
+import org.appmeta.model.TextModel
 import org.appmeta.service.AccountService
+import org.appmeta.service.CacheRefresh
 import org.nerve.boot.Const.COMMA
 import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.module.auth.RoleLinkMapper
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("system/account")
 class AccountManageCtrl(
+    private val cacheR: CacheRefresh,
     private val roleM: RoleMapper,
     private val roleLinkM:RoleLinkMapper,
     private val settingS:SettingService,
@@ -62,9 +66,13 @@ class AccountManageCtrl(
     }
 
     @PostMapping("refresh", name = "执行远程数据同步")
-    fun refreshRemote() = resultWithData {
-        val remote = settingS.value(S.SYS_ACCOUNT_REMOTE)
-        if(!StringUtils.hasText(remote))    throw Exception("请先设置远程同步地址⌈${S.SYS_ACCOUNT_REMOTE}⌋")
+    fun refreshRemote(@RequestBody model:TextModel) = resultWithData {
+        val remote = if(StringUtils.hasText(model.text))
+            model.text
+        else
+            settingS.value(S.SYS_ACCOUNT_REMOTE)
+
+        if(!StringUtils.hasText(remote))    throw Exception("请传递数据或设置远程同步地址⌈${S.SYS_ACCOUNT_REMOTE}⌋")
 
         service.refreshFromRemote(remote)
     }
@@ -107,5 +115,6 @@ class AccountManageCtrl(
 
         //清空缓存
         listOf("AUTH-${account.id}", "AUTH-ROLE-${account.id}").onEach { CacheManage.clear(it) }
+        cacheR.authUser(account.id)
     }
 }

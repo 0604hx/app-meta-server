@@ -87,7 +87,7 @@ class PageCtrl(
     fun modifyField(@RequestBody model: FieldModel):Result {
         Assert.isTrue(modifyFields.contains(model.key), "${model.key} 字段不允许通过该接口修改")
 
-        return _checkEditAuth(model.id) { page, _ ->
+        return _checkEditResult(model.id) { page, _ ->
             val wrapper = UpdateWrapper<Page>()
 
             if(model.key == F.MAIN){
@@ -206,7 +206,7 @@ class PageCtrl(
     }
 
     @GetMapping("content", name = "获取页面内容")
-    fun loadContent(id:Long) = _checkServiceAuth(id) { page, _ ->
+    fun loadContent(id:Long) = _checkServiceResult(id) { page, _ ->
         if(page.template == Page.H5){
             val location = "${config.resAppPath}/${page.aid}-${id}/${config.home}"
             val resource = if("file".equals(config.resProtocol, true)) FileSystemResource(location) else ClassPathResource(location)
@@ -224,7 +224,7 @@ class PageCtrl(
     }
 
     @PostMapping("content", name = "更新页面内容")
-    fun updateContent(@RequestBody model: FieldModel) = _checkEditAuth(model.id) { page, _ ->
+    fun updateContent(@RequestBody model: FieldModel) = _checkEditResult(model.id) { page, _ ->
         pageM.update(
             null,
             UpdateWrapper<Page>().eq(F.ID, model.id)
@@ -261,7 +261,7 @@ class PageCtrl(
     }
 
     @PostMapping("document-upload", name = "上传页面附件")
-    fun documentUpload(@RequestParam("file") file: MultipartFile, model:PageModel)  = _checkEditAuth(model.pid) { page, user->
+    fun documentUpload(@RequestParam("file") file: MultipartFile, model:PageModel)  = _checkEditResult(model.pid) { page, user->
         val document = documentS.store(file.inputStream, file.originalFilename!!) { doc->
             doc.of(user)
             doc.aid = page.aid
@@ -275,14 +275,14 @@ class PageCtrl(
     }
 
     @PostMapping("document-del", name = "删除页面附件")
-    fun documentDel(@RequestBody model: PageModel) = _checkEditAuth(model.pid) { _, _ ->
+    fun documentDel(@RequestBody model: PageModel) = _checkEditResult(model.pid) { _, _ ->
         val doc = documentS.delete(model.id!!)
 
         opLog("删除附件 #${doc.id}/${doc.filename}", doc, Operation.DELETE)
     }
 
     @PostMapping("document-edit", name = "修改附件信息")
-    fun documentModify(@RequestBody doc:Document) = _checkEditAuth(doc.pid) { _, _ ->
+    fun documentModify(@RequestBody doc:Document) = _checkEditResult(doc.pid) { _, _ ->
         val q = UpdateWrapper<Document>().eq(F.ID, doc.id).eq(F.PID, doc.pid)
         if(StringUtils.hasText(doc.filename))
             q.set("filename", doc.filename)

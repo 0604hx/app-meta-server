@@ -28,6 +28,16 @@ class Pm2DeployerTest:AppTest() {
         json(deployer.remove(DEMO))
     }
 
+//    @Test
+//    fun detail(){
+//        json(deployer.detail(DEMO))
+//    }
+
+    @Test
+    fun restart(){
+        println("启动应用：${deployer.restart(DEMO)}")
+    }
+
     @Test
     fun deploy(){
         json(

@@ -1,9 +1,12 @@
 package org.appmeta.tool
 
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.input.ReversedLinesFileReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
@@ -89,4 +92,23 @@ object FileTool {
             return trace
         }
     }
+
+    /**
+     * 读取文件前N行或者最后N行
+     */
+    fun readLines(p:Path, reversed:Boolean=true, lineSize:Int=10, charset: Charset =Charsets.UTF_8) =
+        if(reversed)
+            ReversedLinesFileReader(p, charset).use { it.readLines(lineSize) }
+        else
+            RandomAccessFile(p.toFile(), "r").use { r->
+                val lines = mutableListOf<String>()
+                var count = 0
+                while (count < lineSize){
+                    val line = r.readLine()
+                    if(line != null)
+                        lines.add(line)
+                    count ++
+                }
+                lines
+            }
 }

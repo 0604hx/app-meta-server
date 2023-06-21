@@ -20,7 +20,7 @@ interface Deployer {
     /**
      * 重启或者运行某个应用
      */
-    fun restart(id:String):Boolean
+    fun restart(id:String)
 
     /**
      * 停止应用
@@ -31,6 +31,11 @@ interface Deployer {
      * 移除应用
      */
     fun remove(id:String)
+
+    /**
+     * 查看指定应用的详细信息
+     */
+//    fun detail(id:String):Map<String, Any>
 
     fun overview():List<TerminalProcess>
 }

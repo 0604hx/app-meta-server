@@ -30,7 +30,11 @@ import org.springframework.util.StringUtils
 import org.springframework.web.client.RestTemplate
 import java.io.File
 import java.io.FileInputStream
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
+import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
 
 /*
  * @project app-meta-server
@@ -99,7 +103,7 @@ class AccountService(
     @Resource
     lateinit var restTemplate: RestTemplate
 
-    @Cacheable(Caches.AUTH_USER)
+    @Cacheable(Caches.AUTH_USER, key = "#uid")
     fun toAuthUser(uid: String, ip:String=""):AuthUser {
         val account = getById(uid)?:throw ServiceException("ACCOUNT #${uid} INVALID")
         val user = AuthUser()
@@ -126,25 +130,45 @@ class AccountService(
      * 解析的内容示例：
      *
      * {"success":true,"data":[["用户ID","用户名","部门ID 部门名称"]]}
+     *
+     * 参数可以是：
+     * ① 远程地址，返回特定格式的内容
+     * ② 文件路径
+     * ③ JSON 格式的字符串（以 { 或者 [ 开头）
      */
     fun refreshFromRemote(remote:String): String {
-        val lines = if(remote.startsWith("http")){
-            val response = restTemplate.getForEntity(remote, String::class.java)
-            logger.info("从 $remote 获取到响应数据 [CODE=${response.statusCode}]")
+        val lines = (
+                if(remote.startsWith("http")){
+                    val response = restTemplate.getForEntity(remote, String::class.java)
+                    logger.info("从 $remote 获取到响应数据 [CODE=${response.statusCode}]")
 
-            if(response.statusCode != HttpStatus.OK)    throw Exception("获取远程用户信息（$remote）失败：${response.statusCode}")
+                    if(response.statusCode != HttpStatus.OK)    throw Exception("获取远程用户信息（$remote）失败：${response.statusCode}")
 
-            //如果使用 restTemplate 转换返回的是 ArrayList，故统一使用 JSON2 进行转换
-            JSON.parseObject(response.body!!, Result::class.java, SupportSmartMatch).data
-        }
-        else{
-            val file = File(remote)
-            if(!(file.exists() && file.isFile)) throw Exception("读取用户信息文件（$remote）失败：文件不存在或不可读")
+                    //如果使用 restTemplate 转换返回的是 ArrayList，故统一使用 JSON2 进行转换
+                    response.body!!
+                }
+                else if(remote.trim()[0].let { it == '{' || it=='[' }){
+                    remote
+                }
+                else{
+//                    val file = File(remote)
+//                    if(!(file.exists() && file.isFile)) throw Exception("读取用户信息文件（$remote）失败：文件不存在或不可读")
+//
+//                    JSON.parseObject<Result>(FileInputStream(file), Result::class.java, SupportSmartMatch).data
+                    Paths.get(remote).let {
+                        if(!(it.exists() && it.isRegularFile())) throw Exception("读取用户信息文件（$remote）失败：文件不存在或不可读")
 
-            JSON.parseObject<Result>(FileInputStream(file), Result::class.java, SupportSmartMatch).data
-        }
+                        Files.readString(it, Charsets.UTF_8)
+                    }
+                }
+            ).let {
+                if(it.startsWith(("[")))
+                    JSON.parseArray(it)
+                else
+                    JSON.parseObject(it, Result::class.java, SupportSmartMatch).data
+            }
 
-        Assert.isTrue(lines is JSONArray, "用户清单必须是数组格式")
+        Assert.isTrue(lines is JSONArray, "用户清单必须是数组格式（当前格式为 ${lines.javaClass.simpleName}）")
 
         val users   = mutableListOf<Account>()
         val departs = mutableMapOf<String, Department>()

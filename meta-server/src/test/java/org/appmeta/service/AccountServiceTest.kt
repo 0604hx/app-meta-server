@@ -68,7 +68,23 @@ class AccountServiceTest : AppTest() {
 
     @Test
     fun refreshFromRemote(){
-        service.refreshFromRemote("C:\\Users\\admin\\Desktop\\accunt-list.json")
+//        service.refreshFromRemote("demo/account-list.json")
+        service.refreshFromRemote("demo/account-array.json")
+    }
+
+    @Test
+    fun refreshFromRemoteWithString(){
+        service.refreshFromRemote("""
+            [
+              ["00001","张三","001 办公室"],
+              ["00002","李四","001 办公室"],
+              ["00003","王五","001 办公室"],
+              ["00004","莫六","001 办公室"],
+              ["00005","曾七","001 办公室"],
+              ["00006","刘八","001 办公室"]
+            ]
+            """.trimIndent()
+        )
     }
 
     @Test
