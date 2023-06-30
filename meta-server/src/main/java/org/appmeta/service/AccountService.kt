@@ -12,6 +12,7 @@ import org.appmeta.component.SettingChangeEvent
 import org.appmeta.domain.*
 import org.mindrot.jbcrypt.BCrypt
 import org.nerve.boot.Result
+import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.db.service.BaseService
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.domain.UserAuthRecognizer
@@ -103,17 +104,20 @@ class AccountService(
     @Resource
     lateinit var restTemplate: RestTemplate
 
-    @Cacheable(Caches.AUTH_USER, key = "#uid")
-    fun toAuthUser(uid: String, ip:String=""):AuthUser {
-        val account = getById(uid)?:throw ServiceException("ACCOUNT #${uid} INVALID")
-        val user = AuthUser()
-        user.id = uid
-        user.ip = ip
-        user.name   = account.name
-        user.roles  = recognizer.loadRoleByUser(user)
+    fun toAuthUser(uid: String, ip:String=""):AuthUser = CacheManage.get(
+        "AUTH-$uid-$ip",
+        {
+            val account = getById(uid)?:throw ServiceException("ACCOUNT #${uid} INVALID")
 
-        return user
-    }
+            AuthUser().also {
+                it.id = uid
+                it.ip = ip
+                it.name   = account.name
+                it.roles  = recognizer.loadRoleByUser(it)
+            }
+        },
+        30 * 60
+    )
 
     @Cacheable(Caches.ACCOUNT)
     fun listOfAll() = mapOf(

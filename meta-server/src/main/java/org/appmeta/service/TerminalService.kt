@@ -55,10 +55,7 @@ class TerminalService(private val logM:TerminalLogMapper, private val pageM:Page
                 .eq(F.AID, aid).select(F.CONTENT, F.ID)
         )
 
-        return if(page != null)
-            JSON.parseObject(page.content, Terminal::class.java).also { it.pid = "${page.id}" }
-        else
-            null
+        return JSON.parseObject(page.content, Terminal::class.java)?.also {  it.pid = "${page.id}" }
     }
 
     @Async

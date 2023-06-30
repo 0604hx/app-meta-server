@@ -14,6 +14,7 @@ import org.appmeta.domain.*
 import org.appmeta.model.*
 import org.appmeta.service.*
 import org.nerve.boot.Result
+import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.enums.Fields
 import org.nerve.boot.module.operation.Operation
 import org.springframework.context.ApplicationEventPublisher
@@ -154,6 +155,19 @@ class PageCtrl(
             .onEach {
                 // 标记是否已经关注（没有更多的字段了哈哈，active 为筛选字段，故可以用）
                 it.active = linkS.check("${it.id}", user.id)
+            }
+    }
+
+    @PostMapping("list-editable", name = "页面列表（维护授权）")
+    fun listOfEditable(@RequestBody model: QueryModel) = resultWithData {
+        val user = authHolder.get()
+        model.form["EQ_active"] = true
+        model.form["NE_uid"] = user.id
+
+        service.list(model)
+            .filter { authHelper.checkEdit(it, user) }
+            .onEach {p->
+                appM.withCache(p.aid)?.let { p.content = "${it.id}/${it.name}" }
             }
     }
 

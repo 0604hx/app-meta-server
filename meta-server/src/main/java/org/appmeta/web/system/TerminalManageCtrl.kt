@@ -27,7 +27,7 @@ class TerminalManageCtrl(
         CacheManage.get(KEY, { deployer.overview() }, 5*60)
     }
 
-    @RequestMapping("log", name = "后端服务记录列表")
+    @RequestMapping("trace", name = "后端服务记录列表")
     fun logList(@RequestBody model: QueryModel) = result {
         it.data = service.logList(model.form, model.pagination)
         it.total= model.pagination.total

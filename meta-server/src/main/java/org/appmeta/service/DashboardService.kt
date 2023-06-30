@@ -69,7 +69,7 @@ class DashboardService(
             pageM.selectList(QueryWrapper<Page>().select(F.NAME, F.LAUNCH).orderByDesc(F.LAUNCH).last("LIMIT 10"))
                 .associate { Pair(it.name, it.launch) },
            mapOf(
-               "started"    to DateUtil.formatDate(Date(ManagementFactory.getRuntimeMXBean().startTime)),
+               "started"    to DateUtil.formatDate(Date(ManagementFactory.getRuntimeMXBean().startTime), "MM-dd HH:mm"),
                "memory"     to (memHeap.used + memNonHeap.used) / MB,
                "memoryMax"  to (memHeap.max + memNonHeap.max) / MB,
                "threads"    to ManagementFactory.getThreadMXBean().threadCount,

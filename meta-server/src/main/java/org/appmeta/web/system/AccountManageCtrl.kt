@@ -97,7 +97,7 @@ class AccountManageCtrl(
                 roles.add(role.id)
             else
                 roles.remove(role.id)
-            roles.joinToString(COMMA)
+            roles.filter { StringUtils.hasText(it) }.joinToString(COMMA)
         }
         else{
             model.value.toString()
@@ -114,7 +114,8 @@ class AccountManageCtrl(
         }
 
         //清空缓存
-        listOf("AUTH-${account.id}", "AUTH-ROLE-${account.id}").onEach { CacheManage.clear(it) }
+        CacheManage.clear("AUTH-ROLE-${account.id}")
+        CacheManage.clearWithPrefix("AUTH-${account.id}")
         cacheR.authUser(account.id)
     }
 }

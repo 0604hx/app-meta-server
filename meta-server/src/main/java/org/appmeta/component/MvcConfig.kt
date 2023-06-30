@@ -3,9 +3,9 @@ package org.appmeta.component
 import org.appmeta.ANY
 import org.appmeta.URL_ALL
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.filter.CorsFilter
@@ -48,25 +48,28 @@ class MvcConfig(private val config: AppConfig) : WebMvcConfigurer {
         registry.addViewController("").setViewName(config.home)
     }
 
-    @Bean
-    @Profile("dev")
-    fun corsFilter() = CorsFilter(
-        UrlBasedCorsConfigurationSource().also {
-            logger.info("[CORS] 开发模式下支持跨域请求 Access-Control-Allow-Origin=${ANY}")
-
-            it.registerCorsConfiguration(
-                URL_ALL,
-
-                CorsConfiguration().also { c->
-                    c.addAllowedOrigin(ANY)
-                    c.addAllowedHeader(ANY)
-                    c.addAllowedMethod(ANY)
-                    // 设置为 true 时无法正常 CORS
-                    c.allowCredentials = false
-                }
-            )
-        }
-    )
+    /**
+     * 默认开启 CORS
+     */
+//    @Bean
+//    @ConditionalOnProperty(value = ["app.cors"], havingValue = "true", matchIfMissing = false)
+//    fun corsFilter() = CorsFilter(
+//        UrlBasedCorsConfigurationSource().also {
+//            logger.info("[CORS] 开启支持跨域请求 Access-Control-Allow-Origin=${ANY}")
+//
+//            it.registerCorsConfiguration(
+//                URL_ALL,
+//
+//                CorsConfiguration().also { c->
+//                    c.addAllowedOrigin(ANY)
+//                    c.addAllowedHeader(ANY)
+//                    c.addAllowedMethod(ANY)
+//                    // 设置为 true 时无法正常 CORS
+//                    c.allowCredentials = false
+//                }
+//            )
+//        }
+//    )
 
     /*
     由于启用了自定义 Filter ，此方法配置的 CORS 不生效

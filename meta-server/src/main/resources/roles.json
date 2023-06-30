@@ -3,7 +3,7 @@
   { "id": "DEPLOYER", "name": "应用服务部署者", "summary": "具备部署后端服务的权限（请慎重分配慎重该角色）" },
   { "id": "DEVELOPER", "name": "应用开发者", "summary": "平台应用开发人员（能够使用技术人员专属功能，如在客户端访问本地前端项目）" },
   { "id": "APP_MANAGER", "name": "应用管理者", "summary": "具备创建、编辑任意应用的权限（请慎重分配慎重该角色）" },
-  { "id": "DBM", "name": "数据库使用者", "summary": "具备使用数据源的权限（请慎重分配慎重该角色）", "urls": "/dbm,/dbm/items,/dbm/source/mine,/dbm/source/detail" },
+  { "id": "DBM", "name": "数据库使用者", "summary": "具备使用数据源的权限（请慎重分配慎重该角色）", "urls": "/dbm,/dbm/items,/dbm/source/detail,/dbm/source/list" },
   { "id": "DBM_ADMIN", "name": "数据库管理者", "summary": "具备操作数据源的权限（请慎重分配慎重该角色）", "urls": "/dbm/**" },
   { "id": "SYS_ADMIN", "name": "系统功能管理者", "summary": "具备更新资源、JAR及拉取日志的权限（请慎重分配慎重该角色）", "urls": "/system/**" }
 ]

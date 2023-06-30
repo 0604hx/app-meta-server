@@ -3,6 +3,7 @@ package org.appmeta.module.dbm
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import org.apache.ibatis.jdbc.SqlBuilder
 import org.appmeta.ANY
 import org.appmeta.F
 import org.appmeta.S
@@ -84,9 +85,12 @@ class DatabaseService(
         return@use if(it.resultSet == null) listOf("${it.updateCount} row(s) effected!") else _readResultSet(it.resultSet)
     }
 
-    private fun queryForBatch(conn: Connection, sql:String) = conn.prepareStatement(sql).use {
-        it.executeBatch()
-        return@use it.updateCount
+    private fun queryForBatch(conn: Connection, sql:String) = conn.createStatement().use { se->
+        // 按照分号+换行进行分割
+        sql.split(";\n").onEach { se.addBatch(it) }
+        se.executeBatch()
+
+        return@use se.updateCount
     }
 
     private fun _readResultSet(result: ResultSet, withTitle:Boolean = true):List<Any> {
