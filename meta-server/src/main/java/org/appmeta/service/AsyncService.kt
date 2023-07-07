@@ -35,7 +35,7 @@ class AppAsync(
 
     val logger = LoggerFactory.getLogger(javaClass)
 
-    private val launchMap = LimitMap<Long>(200)
+    private val launchMap = LimitMap<Long>(500)
 
     /**
      * 数值类型字段的增减
@@ -52,7 +52,7 @@ class AppAsync(
 
     @Async
     fun afterLaunch(model: PageModel, uid:String, ip:String=EMPTY) {
-        val key = model.toString()
+        val key = "${model}-${uid}-${model.channel}"
         val cur = System.currentTimeMillis()
 
         if(cur - launchMap.getOrDefault(key, 0L) > config.appLaunchWindow*60*1000){
