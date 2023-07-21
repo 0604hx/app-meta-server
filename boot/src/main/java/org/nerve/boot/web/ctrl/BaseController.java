@@ -92,6 +92,16 @@ public abstract class BaseController {
         return Objects.isNull(p)?defaultValue:p;
     }
 
+    /**
+     * 获取请求头，不存在则返回空字符串
+     * @param name
+     * @return
+     */
+    protected String getHeader(String name){
+        String h = request.getHeader(name);
+        return Objects.isNull(h) ? "":h;
+    }
+
     protected boolean isGET(){
         return request.getMethod().equalsIgnoreCase(HttpMethod.GET.name());
     }

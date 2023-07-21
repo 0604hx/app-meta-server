@@ -23,7 +23,7 @@ import java.net.URLEncoder
 
 @RestController
 @RequestMapping("data")
-class DataCtrl(private val appRoleS: AppRoleService,private val service: DataService, private val mapper:DataMapper):BasicController() {
+class DataCtrl(private val appRoleS: AppRoleService,private val service: DataService, private val mapper:DataMapper):CommonCtrl() {
 
     private fun _detectRole(model: DataModel) {
 //        val user = authHolder.get()
@@ -43,6 +43,7 @@ class DataCtrl(private val appRoleS: AppRoleService,private val service: DataSer
         val user = authHolder.get()
         if(user != null)    model.uid   = user.id
 
+        model.channel = getChannel()
         service.create(model)
     }
 

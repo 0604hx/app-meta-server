@@ -10,6 +10,7 @@ import org.appmeta.Caches
 import org.appmeta.S
 import org.appmeta.component.SettingChangeEvent
 import org.appmeta.domain.*
+import org.appmeta.model.UserResultModel
 import org.mindrot.jbcrypt.BCrypt
 import org.nerve.boot.Result
 import org.nerve.boot.cache.CacheManage
@@ -21,10 +22,12 @@ import org.nerve.boot.module.auth.RoleMapper
 import org.nerve.boot.module.setting.SettingService
 import org.nerve.boot.util.AESProvider
 import org.nerve.boot.util.MD5Util
+import org.nerve.boot.web.auth.UserLoader
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.event.EventListener
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.util.Assert
 import org.springframework.util.StringUtils
@@ -213,5 +216,26 @@ class AccountService(
             // 立即进行用户数据同步
             refreshFromRemote(it)
         }
+    }
+}
+
+@Component
+class AccountHelper(
+    private val userLoader: UserLoader,
+    private val departmentM:DepartmentMapper) {
+
+    /**
+     * 根据 TOKEN 构建用户信息
+     */
+    fun buildUserBean(token:String) = userLoader.from(token).let { user->
+        if(user == null)    return@let null
+
+        UserResultModel(
+            user.id,
+            user.name,
+            user.ip,
+            if(StringUtils.hasText(user.id)) departmentM.loadByUser(user.id) else null,
+            user.roles
+        )
     }
 }

@@ -86,7 +86,7 @@ class ProxyService(private val settingS:SettingService, private val config: AppC
 class ProxyCtrl(
     private val settingS: SettingService,
     private val service: ProxyService,
-    private val config: AppConfig, private val route: ServiceRoute, private val terminalS:TerminalService) : BasicController(){
+    private val route: ServiceRoute, private val terminalS:TerminalService) : CommonCtrl(){
 
     @RequestMapping("service/{aid}/**", name = "应用后台服务")
     fun redirect(@PathVariable aid:String, response:HttpServletResponse):ResponseEntity<*> {
@@ -104,6 +104,7 @@ class ProxyCtrl(
         val log = TerminalLog(aid, url)
         log.method  = request.method
         log.uid = user.id
+        log.channel = getChannel()
 
         return try{
             route.redirect( request, response, url, service.buildHeader(user) ).also {

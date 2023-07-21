@@ -8,6 +8,7 @@ import org.appmeta.domain.DepartmentMapper
 import org.appmeta.model.TextModel
 import org.appmeta.model.UserResultModel
 import org.appmeta.model.WelcomeResultModel
+import org.appmeta.service.AccountHelper
 import org.appmeta.tool.AuthHelper
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.module.setting.SettingService
@@ -38,8 +39,7 @@ import java.util.*
 class IndexCtrl(
     private val appM:AppMapper,
     private val authHelper: AuthHelper,
-    private val userLoader: UserLoader,
-    private val departmentM:DepartmentMapper,
+    private val accountHelper: AccountHelper,
     private val authConfig:AuthConfig,
     private val settingS:SettingService):BasicController(){
 
@@ -50,17 +50,7 @@ class IndexCtrl(
     }
 
     // authHolder 未被注入，故直接通过 JWT token 获取用户信息
-    private fun _buildUserBean() = userLoader.from(request.getHeader(authConfig.tokenName)).let { user->
-        if(user == null)    return@let null
-
-        UserResultModel(
-            user.id,
-            user.name,
-            user.ip,
-            if(StringUtils.hasText(user.id)) departmentM.loadByUser(user.id) else null,
-            user.roles
-        )
-    }
+    private fun _buildUserBean() =  accountHelper.buildUserBean(request.getHeader(authConfig.tokenName))
 
     @PostMapping("whoami", name = "当前登录信息")
     fun whoami() = resultWithData { _buildUserBean() }

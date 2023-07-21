@@ -103,6 +103,7 @@ abstract class DataModel(val action:String = CREATE): PageWithUser() {
 class DataCreateModel: DataModel(){
     var objs    = listOf<Map<String, Any>>()
     var origin  = ""
+    var channel = ""
 }
 
 class DataUpdateModel: DataModel(UPDATE)

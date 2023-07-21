@@ -192,6 +192,7 @@ CREATE TABLE `data` (
   `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
   `pid` varchar(100) DEFAULT NULL COMMENT '关联表单ID（预留，以后可能用得上）',
   `uid` varchar(15) DEFAULT NULL,
+  `channel` varchar(20) DEFAULT NULL,
   `v` json DEFAULT NULL,
   `addOn` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -281,6 +282,7 @@ CREATE TABLE `terminal_log` (
   `code` int DEFAULT 0,
   `summary` text,
   `used` bigint DEFAULT NULL,
+  `channel` varchar(20) DEFAULT NULL,
   `addOn` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `aid_IDX` (`aid`) USING BTREE

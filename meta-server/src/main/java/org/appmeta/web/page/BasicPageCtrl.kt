@@ -5,6 +5,7 @@ import org.appmeta.domain.Page
 import org.appmeta.domain.PageMapper
 import org.appmeta.service.CacheRefresh
 import org.appmeta.tool.AuthHelper
+import org.appmeta.web.CommonCtrl
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.web.ctrl.BasicController
@@ -21,7 +22,7 @@ import java.io.Serializable
  * --------------------------------------------------------------
  */
 
-open class BasicPageCtrl : BasicController() {
+open class BasicPageCtrl : CommonCtrl() {
     @Resource
     lateinit var cacheRefresh: CacheRefresh
     @Resource

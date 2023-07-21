@@ -10,6 +10,7 @@ import org.appmeta.tool.OSTool
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Paths
+import java.util.*
 
 
 /*
@@ -22,6 +23,11 @@ import java.nio.file.Paths
  */
 
 class ToolTest {
+
+    @Test
+    fun date(){
+        println(Date(System.currentTimeMillis() + 50*365*24*60 * 60 * 1000L))
+    }
 
     @Test
     fun unzip(){

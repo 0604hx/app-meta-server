@@ -45,7 +45,7 @@ class DataService(private val batchM:DataBatchMapper, private val blockM:DataBlo
 
         var counter = 0
         objs.forEach { d->
-            with(Data(aid, uid)) {
+            with(Data(aid, uid, model.channel)) {
                 this.pid    = pid
 
                 this.v      = if(isBatch) {

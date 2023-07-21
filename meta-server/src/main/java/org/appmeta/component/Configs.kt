@@ -38,6 +38,8 @@ class AppConfig {
     var terminalStart   = "terminal.config.js"
     var terminalConfig  = "config.json"     //默认的配置文件
 
+    var headerChannel   = "CHANNEL"
+
     var dbmKey          = "WhlGdNfs4pwd138e"//数据库管理模块密钥
     var dbmLifetime     = 2 * 60L           //数据库管理模块 DataSource 存活时长，单位分钟
     var dbmAuthExpire   = 10 * 60           //数据库管理模块权限缓存，单位秒

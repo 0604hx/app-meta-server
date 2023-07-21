@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.io.FileUtils
+import org.appmeta.Channels.MOBILE
 import org.appmeta.F
 import org.appmeta.Role
 import org.appmeta.SERVER
@@ -17,6 +18,7 @@ import org.nerve.boot.Result
 import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.enums.Fields
 import org.nerve.boot.module.operation.Operation
+import org.nerve.boot.web.auth.AuthConfig
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.FileSystemResource
@@ -47,9 +49,10 @@ class PageCtrl(
     private val documentM:DocumentMapper,
     private val documentS:DocumentService,
     private val accountM:AccountMapper,
+    private val accountHelper: AccountHelper,
     private val dataBatchM:DataBatchMapper,
+    private val authConfig: AuthConfig,
     private val dataS:DataService,
-    private val config:AppConfig,
     private val linkS:PageLinkService,
     private val service:PageService) : BasicPageCtrl() {
 
@@ -133,7 +136,7 @@ class PageCtrl(
         eventPublisher.publishEvent(PageDeleteEvent(model.id))
         //对于小程序，则删除文件夹，但是保留了历史文件，可用于还原
         if(page.template == Page.H5){
-            val location = "${config.resAppPath}/${page.aid}-${page.id}"
+            val location = "${appConfig.resAppPath}/${page.aid}-${page.id}"
             FileUtils.deleteDirectory(Paths.get(location).toFile())
             logger.info("删除H5小程序目录 $location")
         }
@@ -184,17 +187,18 @@ class PageCtrl(
     fun detail(@RequestBody model:PageModel) = resultWithData {
         val page = pageM.selectById(model.id)?: return@resultWithData null
         val user = authHolder.get()
+        model.channel = getChannel()
 
         val canServie = page.active && authHelper.checkService(page, user)
 
         appAsync.afterLaunch(
-            PageModel(page.aid, page.id, model.channel),
+            model,
             user.id,
             requestIP
         )
 
         //最简返回
-        mapOf(
+        val map= mutableMapOf(
             F.ID        to page.id,
             F.AID       to page.aid,
             F.NAME      to page.name,
@@ -203,6 +207,10 @@ class PageCtrl(
             F.CONTENT   to if(canServie) pageM.getContent(page.id) else "",
             "documents" to if(canServie) documentS.listByPage("${page.id}") else null
         )
+        //对于移动终端，直接返回 User 信息（减少请求次数）
+        if(model.channel == MOBILE && canServie)
+            map[F.USER] = accountHelper.buildUserBean(request.getHeader(authConfig.tokenName))
+        map
     }
 
     /**
@@ -222,8 +230,8 @@ class PageCtrl(
     @GetMapping("content", name = "获取页面内容")
     fun loadContent(id:Long) = _checkServiceResult(id) { page, _ ->
         if(page.template == Page.H5){
-            val location = "${config.resAppPath}/${page.aid}-${id}/${config.home}"
-            val resource = if("file".equals(config.resProtocol, true)) FileSystemResource(location) else ClassPathResource(location)
+            val location = "${appConfig.resAppPath}/${page.aid}-${id}/${appConfig.home}"
+            val resource = if("file".equals(appConfig.resProtocol, true)) FileSystemResource(location) else ClassPathResource(location)
 
             if(!resource.exists()) {
                 logger.error("小程序⌈${page.name}⌋未部署资源文件 $resource")
@@ -231,7 +239,7 @@ class PageCtrl(
             }
 
             if(logger.isDebugEnabled)   logger.debug("小程序部署地址：$resource")
-            "${request.contextPath}/${config.resAppContext}/${page.aid}-${id}/${config.home}"
+            "${request.contextPath}/${appConfig.resAppContext}/${page.aid}-${id}/${appConfig.home}"
         }
         else
             pageM.getContent(id)

@@ -24,6 +24,7 @@ import org.nerve.boot.annotation.CN
 @TableName(autoResultMap = true)
 open class Data : AppWithUser {
     var pid     = ""
+    var channel = ""
     @TableField(typeHandler = Fastjson2TypeHandler::class, jdbcType = JdbcType.BLOB)
     var v       = mapOf<String, Any>()
     var addOn   = 0L
@@ -33,6 +34,9 @@ open class Data : AppWithUser {
         this.aid    = aid
         this.uid    = uid
         addOn       = System.currentTimeMillis()
+    }
+    constructor(aid: String, uid: String, channel:String):this(aid, uid) {
+        this.channel= channel
     }
 }
 

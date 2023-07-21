@@ -60,8 +60,7 @@ class AccountServiceTest : AppTest() {
 
     @Test
     fun createJWTUserToken(){
-        jwtConfig.expire = 99 * 365 * 24 * 3600
-        val token = jwtTool.create(UID, "127.0.0.1")
+        val token = jwtTool.create(UID, "127.0.0.1", 50*365*24*60)
 
         println(token)
     }

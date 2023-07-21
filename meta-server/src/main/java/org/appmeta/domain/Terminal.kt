@@ -58,6 +58,7 @@ class TerminalLog:AppWithUser {
 
     var addOn   = 0L
     var used    = 0L        //单位 ms
+    var channel = ""
 
     constructor()
     constructor(aid:String, url:String) {
