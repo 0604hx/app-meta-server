@@ -4,7 +4,8 @@ import io.jsonwebtoken.lang.Assert
 import org.appmeta.Caches
 import org.appmeta.F
 import org.appmeta.component.PageDeleteEvent
-import org.appmeta.component.PageNameChangeEvent
+import org.appmeta.component.PageNameUpdateEvent
+import org.appmeta.component.func.MarkdownFunc
 import org.appmeta.domain.Page
 import org.appmeta.domain.PageLink
 import org.appmeta.domain.PageLinkMapper
@@ -29,7 +30,7 @@ import org.springframework.util.StringUtils.hasText
  */
 
 @Service
-class PageService:BaseService<PageMapper, Page>() {
+class PageService(private val markdownFunc: MarkdownFunc):BaseService<PageMapper, Page>() {
 
     @Cacheable(Caches.PAGE_LIST, key = "#model.hashCode")
     fun list(model:QueryModel):List<Page> = baseMapper.selectList(
@@ -46,12 +47,21 @@ class PageService:BaseService<PageMapper, Page>() {
     /**
      * 查询数量或者符合条件的前 20 条记录
      */
-    fun query(model: QueryModel) =
+    fun query(model: QueryModel):Any =
         if(model.countOnly)
             baseMapper.selectCount(queryHelper.buildFromMap(model.form))
         else{
             list(model.form, model.pagination, model.fields)
         }
+
+    fun buildContent(page:Page, convertMarkdown:Boolean = false): String = baseMapper.getContent(page.id).let { content->
+        //如果是
+        if(convertMarkdown && page.template == Page.MARKDOWN){
+            return@let markdownFunc.embedImages(page.id, content)
+        }
+
+        content
+    }
 }
 
 @Service
@@ -61,8 +71,8 @@ class PageLinkService(private val refresh:CacheRefresh,private val pageM:PageMap
      * 当页面标题更新时，刷新关联中的页面名称
      */
     @Async
-    @EventListener(PageNameChangeEvent::class)
-    fun onPageUpdate(event: PageNameChangeEvent) {
+    @EventListener(PageNameUpdateEvent::class)
+    fun onPageUpdate(event: PageNameUpdateEvent) {
         val page = event.page
 
         baseMapper.update(null, U().eq(F.PID, page.id).set(Fields.NAME.value(), page.name))

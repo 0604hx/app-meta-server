@@ -30,6 +30,27 @@ class CTest {
     }
 
     @Test
+    fun matchMDImage(){
+        Regex("!\\[.*?\\]\\((.*?)\\)").let { reg->
+            val text = reg.replace("""
+                # Markdown 语法
+                > 最近更新：集成显卡
+                
+                ![](http://cdn.aliyun.com/a.png)
+                
+                截图如下：
+                
+                ![b.png](http://cdn.aliyun.com/b.png)
+            """.trimIndent()) { result->
+                val url = result.groupValues.last()
+                "![](data:image/webp:base64,${url})"
+            }
+
+            println(text)
+        }
+    }
+
+    @Test
     fun createJwtKey(){
         val secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512)
         val keyString = Encoders.BASE64.encode(secretKey.encoded)

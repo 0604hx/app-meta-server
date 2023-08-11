@@ -17,7 +17,6 @@ import org.appmeta.service.TerminalService
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.module.setting.SettingService
-import org.nerve.boot.web.ctrl.BasicController
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.http.HttpStatus
@@ -97,7 +96,7 @@ class ProxyCtrl(
 
         url = "${url}${path}${if(hasText(request.queryString)) "?${request.queryString}" else ""}"
 
-        if(logger.isDebugEnabled)    logger.debug("转发请求（APP=$aid） 到 ${url}${path}")
+        if(logger.isDebugEnabled)    logger.debug("转发请求（APP=$aid） 到 $url")
 
         val user = authHolder.get()
 

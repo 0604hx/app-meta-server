@@ -8,14 +8,13 @@ import org.appmeta.Channels.MOBILE
 import org.appmeta.F
 import org.appmeta.Role
 import org.appmeta.SERVER
-import org.appmeta.component.AppConfig
+import org.appmeta.component.PageContentUpdateEvent
 import org.appmeta.component.PageDeleteEvent
-import org.appmeta.component.PageNameChangeEvent
+import org.appmeta.component.PageNameUpdateEvent
 import org.appmeta.domain.*
 import org.appmeta.model.*
 import org.appmeta.service.*
 import org.nerve.boot.Result
-import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.enums.Fields
 import org.nerve.boot.module.operation.Operation
 import org.nerve.boot.web.auth.AuthConfig
@@ -117,7 +116,7 @@ class PageCtrl(
                 if(model.key == Fields.NAME.value()){
                     page.name = model.value.toString()
                     if(logger.isDebugEnabled) logger.debug("发布 #${page.id} 名称变动事件 PageNameChangeEvent")
-                    eventPublisher.publishEvent(PageNameChangeEvent(page))
+                    eventPublisher.publishEvent(PageNameUpdateEvent(page))
                 }
             }
 
@@ -204,7 +203,9 @@ class PageCtrl(
             F.NAME      to page.name,
             F.TEMPLATE  to page.template,
             F.ACTIVE    to page.active,
-            F.CONTENT   to if(canServie) pageM.getContent(page.id) else "",
+            F.CONTENT   to if(canServie) { service.buildContent(page, true) } else
+                ""
+            ,
             "documents" to if(canServie) documentS.listByPage("${page.id}") else null
         )
         //对于移动终端，直接返回 User 信息（减少请求次数）
@@ -227,6 +228,9 @@ class PageCtrl(
         PageResultModel(appM.withCache(model.aid), pageM.selectOne(wrapper))
     }
 
+    /**
+     * 通常是 PC 端使用该接口
+     */
     @GetMapping("content", name = "获取页面内容")
     fun loadContent(id:Long) = _checkServiceResult(id) { page, _ ->
         if(page.template == Page.H5){
@@ -242,7 +246,7 @@ class PageCtrl(
             "${request.contextPath}/${appConfig.resAppContext}/${page.aid}-${id}/${appConfig.home}"
         }
         else
-            pageM.getContent(id)
+            service.buildContent(page, false)
     }
 
     @PostMapping("content", name = "更新页面内容")
@@ -255,6 +259,8 @@ class PageCtrl(
         )
         // 刷新后端服务配置
         if(page.template == SERVER) cacheRefresh.pageServer(page.aid)
+
+        eventPublisher.publishEvent(PageContentUpdateEvent(page))
 
         opLog("更新页面#${model.id} 的内容", page)
     }

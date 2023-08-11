@@ -3,7 +3,6 @@ package org.appmeta.module.dbm
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.apache.ibatis.jdbc.SqlBuilder
 import org.appmeta.ANY
 import org.appmeta.F
 import org.appmeta.S

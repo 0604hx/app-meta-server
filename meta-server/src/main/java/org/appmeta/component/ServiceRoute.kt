@@ -21,13 +21,11 @@ import java.util.*
 class ServiceRoute {
     val logger = LoggerFactory.getLogger(javaClass)
 
-    /**
-     *
-     */
-    fun redirect(request:HttpServletRequest, response:HttpServletResponse, targetUrl:String, headers: Map<String, String?>?=null):ResponseEntity<String> {
+    val restTemplate = RestTemplate().also {  }
+
+    fun redirect(request:HttpServletRequest, response:HttpServletResponse, targetUrl:String, headers: Map<String, String?>?=null):ResponseEntity<ByteArray> {
         val entity = createRequestEntity(request, targetUrl, headers)
-        val restTemplate = RestTemplate()
-        return restTemplate.exchange(entity, String::class.java)
+        return restTemplate.exchange(entity, ByteArray::class.java)
     }
 
     @Throws(URISyntaxException::class, IOException::class)
@@ -36,12 +34,14 @@ class ServiceRoute {
         val headers = parseRequestHeader(request)
         extraHeaders?.forEach { (k, v) -> headers.add(k, v) }
 
-//        if(logger.isDebugEnabled)   headers.forEach { (k, v) -> logger.debug("[HEADER] $k = $v") }
-
+        //将原始请求转换为字节数组
         val body = StreamUtils.copyToByteArray(request.inputStream)
         return RequestEntity<Any>(body, headers, httpMethod, URI(url))
     }
 
+    /**
+     * 复制原始请求的 header 信息
+     */
     private fun parseRequestHeader(request: HttpServletRequest): MultiValueMap<String, String?> {
         val headers = HttpHeaders()
         val headerNames: List<String> = Collections.list(request.headerNames)

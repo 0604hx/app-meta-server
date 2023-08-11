@@ -95,7 +95,11 @@ class DataService(private val batchM:DataBatchMapper, private val blockM:DataBlo
 
         val data = getOne(wrapper)?: throw ServiceException("#${model.id} 数据不存在")
         //目前仅支持修改数据内容
-        data.v += obj
+        if(model.merge)
+            data.v += obj
+        else
+            data.v = obj
+
         updateById(data)
 
         if(logger.isDebugEnabled)   logger.debug("更新数据 #${model.id} $obj")
@@ -121,10 +125,14 @@ class DataService(private val batchM:DataBatchMapper, private val blockM:DataBlo
 
         val wrapper = Q()
             .apply("${F.AID}={0}", aid)
-            .apply(StringUtils.hasText(pid), "${F.PID}={0}", pid)
             .apply(StringUtils.hasText(uid), "${F.UID}={0}", uid)
             .apply(model.timeFrom > 0L, "${F.ADD_ON}>={0}", model.timeFrom)
             .apply(model.timeEnd > 0L, "${F.ADD_ON}<={0}", model.timeEnd)
+        //优先使用 pids
+        if(model.pids.isNotEmpty())
+            wrapper.`in`(F.PID, model.pids)
+        else
+            wrapper.apply(StringUtils.hasText(pid), "${F.PID}={0}", pid)
 
         if(model.id>0L){
             wrapper.apply("${F.ID}={0}", model.id)

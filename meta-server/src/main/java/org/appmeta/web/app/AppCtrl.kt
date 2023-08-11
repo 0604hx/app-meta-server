@@ -11,12 +11,12 @@ import org.appmeta.model.*
 import org.appmeta.service.AppAsync
 import org.appmeta.service.AppService
 import org.appmeta.service.CacheRefresh
+import org.appmeta.web.CommonCtrl
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.exception.ServiceException
 import org.nerve.boot.module.operation.Operation
-import org.nerve.boot.web.ctrl.BasicController
 import org.springframework.http.HttpStatus
 import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.PostMapping
@@ -42,7 +42,7 @@ class AppCtrl(
     private val appAsync: AppAsync,
     private val pageM:PageMapper,
     private val dataM:DataMapper,
-    private val mapper: AppMapper, private val service: AppService) : BasicController() {
+    private val mapper: AppMapper, private val service: AppService) : CommonCtrl() {
 
     protected fun _checkEditAuth(id: Serializable, worker:(App, AuthUser)->Any?): Result {
         val app = mapper.selectById(id)
@@ -68,6 +68,7 @@ class AppCtrl(
     @RequestMapping("launch", name = "运行应用")
     fun launch(@RequestBody model: PageModel) = result {
         val user = authHolder.get()
+        model.channel = getChannel()
         appAsync.afterLaunch(
             model,
             if(user == null) EMPTY else user.id,

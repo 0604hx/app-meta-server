@@ -1,6 +1,5 @@
 package org.appmeta.tool
 
-import org.apache.commons.io.FileUtils
 import org.apache.commons.io.input.ReversedLinesFileReader
 import java.io.File
 import java.io.FileInputStream

@@ -89,6 +89,10 @@ abstract class DataModel(val action:String = CREATE): PageWithUser() {
     // 是否进行批量操作，如果设置此值将给每个数据对象注入批次号 _batch_
     var batch   = ""
     var id      = 0L
+    /*
+    对于需要同时筛选多个 pid，可以传递此值
+     */
+    var pids    = listOf<String>()
 
     var timeFrom= 0L
     var timeEnd = 0L
@@ -106,7 +110,13 @@ class DataCreateModel: DataModel(){
     var channel = ""
 }
 
-class DataUpdateModel: DataModel(UPDATE)
+class DataUpdateModel: DataModel(UPDATE) {
+    /*
+    更新时是否使用合并模式（默认）
+    将传递的 Object 合并到现有值中
+     */
+    var merge   = true
+}
 
 class DataReadModel: DataModel(READ) {
     /**

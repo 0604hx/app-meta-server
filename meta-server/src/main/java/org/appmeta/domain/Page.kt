@@ -27,6 +27,7 @@ import java.io.Serializable
 class Page : AppWithUser, Authable, Launchable {
     companion object {
         const val H5 = "h5"
+        const val MARKDOWN = "markdown"
     }
 
     var name        = ""

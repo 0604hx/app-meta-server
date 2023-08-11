@@ -8,7 +8,6 @@ import org.appmeta.tool.AuthHelper
 import org.appmeta.web.CommonCtrl
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
-import org.nerve.boot.web.ctrl.BasicController
 import org.springframework.http.HttpStatus
 import java.io.Serializable
 

@@ -10,15 +10,12 @@ import org.appmeta.service.AppRoleService
 import org.appmeta.service.DataService
 import org.nerve.boot.module.operation.Operation
 import org.nerve.boot.util.DateUtil
-import org.nerve.boot.web.ctrl.BasicController
 import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URLEncoder
-
-
 
 
 @RestController
@@ -56,7 +53,15 @@ class DataCtrl(private val appRoleS: AppRoleService,private val service: DataSer
     fun query(@Valid @RequestBody model: DataReadModel) = result {
         _detectRole(model)
 
-        it.data     = service.read(model)
+        /*
+        如果 pageSize 为 1 则直接返回 Data 对象
+         */
+        it.data     = service.read(model).let { ds->
+            if(model.pageSize == 1L)
+                ds.firstOrNull()
+            else
+                ds
+        }
         it.total    = model.total
     }
 

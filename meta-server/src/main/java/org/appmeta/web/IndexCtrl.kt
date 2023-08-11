@@ -4,9 +4,7 @@ import com.baomidou.mybatisplus.extension.toolkit.SqlRunner
 import org.appmeta.F
 import org.appmeta.S
 import org.appmeta.domain.AppMapper
-import org.appmeta.domain.DepartmentMapper
 import org.appmeta.model.TextModel
-import org.appmeta.model.UserResultModel
 import org.appmeta.model.WelcomeResultModel
 import org.appmeta.service.AccountHelper
 import org.appmeta.tool.AuthHelper
@@ -15,9 +13,7 @@ import org.nerve.boot.module.setting.SettingService
 import org.nerve.boot.util.DateUtil
 import org.nerve.boot.util.Timing
 import org.nerve.boot.web.auth.AuthConfig
-import org.nerve.boot.web.auth.UserLoader
 import org.nerve.boot.web.ctrl.BasicController
-import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping

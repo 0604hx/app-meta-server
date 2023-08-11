@@ -32,8 +32,6 @@ import org.springframework.stereotype.Service
 import org.springframework.util.Assert
 import org.springframework.util.StringUtils
 import org.springframework.web.client.RestTemplate
-import java.io.File
-import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
