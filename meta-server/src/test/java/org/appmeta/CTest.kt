@@ -4,8 +4,11 @@ import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.io.Encoders
 import io.jsonwebtoken.security.Keys
 import org.appmeta.component.AppConfig
+import org.appmeta.component.SystemConfig
 import org.junit.jupiter.api.Test
 import org.nerve.boot.util.AESProvider
+import org.nerve.boot.util.DateUtil
+import java.util.*
 
 
 /*
@@ -48,6 +51,13 @@ class CTest {
 
             println(text)
         }
+    }
+
+    @Test
+    fun days(){
+        println(System.currentTimeMillis() - 30*24*60*60*1000)
+        println(System.currentTimeMillis())
+        println(Date().let{ d->(-10 ..  0).map { DateUtil.formatDate(DateUtil.addDays(d, it)) }})
     }
 
     @Test

@@ -32,6 +32,7 @@ object F {
     const val UUID      = "uuid"
     const val FROM_DATE = "fromDate"
     const val TO_DATE   = "toDate"
+    const val DEPART    = "depart"
 
     const val TYPE      = "type"
     const val LAUNCH    = "launch"
@@ -117,6 +118,7 @@ enum class S {
     SYS_ROBOT_TRACE,
 
     SYS_WHITE_IP,
+    SYS_DEFAULT_CHANNEL,
 }
 
 class Auth {
@@ -134,6 +136,7 @@ object Caches {
 
     const val APP           = "APP"
     const val APP_ACCOUNT   = "APP_ACCOUNT"
+    const val APP_OVERVIEW  = "APP_OVERVIEW"
 
     const val PAGE_LIST     = "PAGE_LIST"
     const val PAGE_LINK     = "PAGE_LINK"

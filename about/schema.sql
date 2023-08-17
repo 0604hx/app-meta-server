@@ -138,6 +138,7 @@ CREATE TABLE `page_launch` (
   `uid` varchar(15) DEFAULT NULL,
   `ip` varchar(100) DEFAULT '',
   `channel` varchar(20) DEFAULT NULL,
+  `depart`  varchar(100) DEFAULT '',
   `addOn` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `uid_IDX` (`uid`) USING BTREE,

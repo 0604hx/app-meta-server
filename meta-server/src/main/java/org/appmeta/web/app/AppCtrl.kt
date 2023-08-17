@@ -11,6 +11,7 @@ import org.appmeta.model.*
 import org.appmeta.service.AppAsync
 import org.appmeta.service.AppService
 import org.appmeta.service.CacheRefresh
+import org.appmeta.service.DashboardService
 import org.appmeta.web.CommonCtrl
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.Result
@@ -42,6 +43,7 @@ class AppCtrl(
     private val appAsync: AppAsync,
     private val pageM:PageMapper,
     private val dataM:DataMapper,
+    private val dashboardS: DashboardService,
     private val mapper: AppMapper, private val service: AppService) : CommonCtrl() {
 
     protected fun _checkEditAuth(id: Serializable, worker:(App, AuthUser)->Any?): Result {
@@ -51,6 +53,11 @@ class AppCtrl(
             return resultWithData { worker(app, user) }
 
         throw Exception(HttpStatus.UNAUTHORIZED.name)
+    }
+
+    @PostMapping("overview", name = "应用统计总览")
+    fun overview(@RequestBody model: IdStringModel) = resultWithData {
+        dashboardS.ofApp(model.id)
     }
 
     @RequestMapping("top", name = "最新TOP10")
@@ -104,9 +111,9 @@ class AppCtrl(
         app.of(user)
 
         service.create(model)
-        opLog("新增应用⌈${app.name}⌋ 作者=${app.author}", app, Operation.CREATE)
+        opLog("新增应用[${app.name}] 作者=${app.author}", app, Operation.CREATE)
 
-        "⌈${app.name}⌋创建成功"
+        "[${app.name}]创建成功"
     }
 
     @RequestMapping("update", name = "更新应用信息")
@@ -116,9 +123,9 @@ class AppCtrl(
             app.of(user)
 
         service.update(model)
-        opLog("更新应用⌈${app.name}⌋ 作者=${app.author}", app, Operation.MODIFY)
+        opLog("更新应用[${app.name}] 作者=${app.author}", app, Operation.MODIFY)
 
-        "应用⌈${app.name}⌋更新成功"
+        "应用[${app.name}]更新成功"
     }
 
     @PostMapping("modify", name = "修改应用属性")
@@ -144,11 +151,11 @@ class AppCtrl(
         if (app.uid == user.id || user.hasRole(Role.ADMIN)) {
             val dataCount = dataM.selectCount(QueryWrapper<Data>().eq(F.AID, id))
             if(dataCount > 0L){
-                throw ServiceException("应用⌈${id}/${app.name}⌋下有 $dataCount 条数据，请先处理再操作")
+                throw ServiceException("应用[${id}/${app.name}]下有 $dataCount 条数据，请先处理再操作")
             }
             val pageCount = pageM.selectCount(QueryWrapper<Page>().eq(F.AID, id))
             if(pageCount > 0L)
-                throw ServiceException("应用⌈${id}/${app.name}⌋下有 $pageCount 个页面，请先处理再操作")
+                throw ServiceException("应用[${id}/${app.name}]下有 $pageCount 个页面，请先处理再操作")
 
             service.removeById(id)
             refresh.app(id)

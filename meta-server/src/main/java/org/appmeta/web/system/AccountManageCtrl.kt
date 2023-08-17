@@ -71,7 +71,7 @@ class AccountManageCtrl(
         else
             settingS.value(S.SYS_ACCOUNT_REMOTE)
 
-        if(!StringUtils.hasText(remote))    throw Exception("请传递数据或设置远程同步地址⌈${S.SYS_ACCOUNT_REMOTE}⌋")
+        if(!StringUtils.hasText(remote))    throw Exception("请传递数据或设置远程同步地址[${S.SYS_ACCOUNT_REMOTE}]")
 
         service.refreshFromRemote(remote)
     }

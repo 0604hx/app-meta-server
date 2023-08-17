@@ -13,6 +13,7 @@ class AppTest {
 	protected val UID	= "admin"
 	protected val UNAME	= "测试管理员"
 	protected val AID 	= "TEST"
+	protected val AID_DEMO	= "demo"
 
 	protected fun getUser(uid:String = UID): AuthUser {
 		val user = AuthUser()

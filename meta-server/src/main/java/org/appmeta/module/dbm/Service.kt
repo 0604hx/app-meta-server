@@ -64,7 +64,7 @@ class DatabaseSourceService(
 
         val authCount = authM.selectCount(QueryWrapper<DatabaseAuth>().eq(F.SOURCE_ID, id))
         if(authCount>0)
-            throw Exception("数据源#$id ⌈${source.type.uppercase()}@${source.host}⌋ 存在 $authCount 则权限分配，暂不能删除")
+            throw Exception("数据源#$id [${source.type.uppercase()}@${source.host}] 存在 $authCount 则权限分配，暂不能删除")
 
         removeById(id)
         return source

@@ -89,7 +89,7 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
                 val script = when(terminal.language){
                     LANG_NODE   -> codeFile.name
                     LANG_JAVA   -> LANG_JAVA
-                    else        -> throw Exception("未实现的开发语言⌈${terminal.language}⌋")
+                    else        -> throw Exception("未实现的开发语言[${terminal.language}]")
                 }
 
                 IOUtils.write(

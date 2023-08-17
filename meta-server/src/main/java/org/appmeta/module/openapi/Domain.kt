@@ -45,7 +45,7 @@ class Api:IDLong(), Launchable {
     var name        = ""
     override var launch         = 0
 
-    override fun toString() = "开放接口⌈${id}/${name}⌋"
+    override fun toString() = "开放接口[${id}/${name}]"
 }
 
 @CN("开放接口详细")

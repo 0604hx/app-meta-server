@@ -12,6 +12,11 @@ import org.springframework.context.annotation.Configuration
  * --------------------------------------------------------------
  */
 
+class DashboardConfig {
+    var daySpan         = 30                //统计流量的时间跨度（天）
+    var top             = 8                 //用户等统计前N
+}
+
 @Configuration
 @ConfigurationProperties(prefix = "app")
 class AppConfig {
@@ -29,7 +34,7 @@ class AppConfig {
     var resZipLimit     = 20                //最多保留版本包数量
 
     var appIdRegex      = "^[A-Za-z0-9_]{3,20}\$"
-    var appLaunchWindow = 60                //应用运行次数统计的时间窗口，单位分钟，即在该时间内不会重复计算
+    var appLaunchWindow = 20                //应用运行次数统计的时间窗口，单位分钟，即在该时间内不会重复计算
 
     var authCheckIP     = true              //是否在 CAS 回调中判断IP一致性（在某些场景下需要设置为 false）
     var authCacheExpire = 5                 //授权信息缓存时长（单位分钟），默认 5
@@ -43,6 +48,8 @@ class AppConfig {
     var dbmKey          = "WhlGdNfs4pwd138e"//数据库管理模块密钥
     var dbmLifetime     = 2 * 60L           //数据库管理模块 DataSource 存活时长，单位分钟
     var dbmAuthExpire   = 10 * 60           //数据库管理模块权限缓存，单位秒
+
+    var dashboard       = DashboardConfig()
 }
 
 @Configuration

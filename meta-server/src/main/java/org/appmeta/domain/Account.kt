@@ -46,5 +46,5 @@ interface AccountPwdMapper:BaseMapper<AccountPwd>
 interface DepartmentMapper:BaseMapper<Department> {
 
     @Select("SELECT d.* FROM department d WHERE d.id=(SELECT a.did FROM account a WHERE a.id=#{0}) LIMIT 1")
-    fun loadByUser(uid:String):Department
+    fun loadByUser(uid:String):Department?
 }

@@ -257,8 +257,8 @@ class AppService(
         val (app, property) = model
 
         if(!Regex(cfg.appIdRegex).matches(app.id))
-            throw Exception("应用编号⌈${app.id}⌋不合规，必须是长度在3-20间的字母数字下划线组合")
-        if(count(Q().eq(F.ID, app.id)) > 0)     throw ServiceException("应用编号⌈${app.id}⌋已存在")
+            throw Exception("应用编号[${app.id}]不合规，必须是长度在3-20间的字母数字下划线组合")
+        if(count(Q().eq(F.ID, app.id)) > 0)     throw ServiceException("应用编号[${app.id}]已存在")
 
         app.addOn   = System.currentTimeMillis()
         save(app)
@@ -276,7 +276,7 @@ class AppService(
         val (app, property) = model
 
         if(!baseMapper.exists(Q().eq(F.ID, app.id)))
-            throw Exception("应用编号⌈${app.id}⌋不存在")
+            throw Exception("应用编号[${app.id}]不存在")
 
         updateById(app)
 

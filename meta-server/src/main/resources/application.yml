@@ -57,6 +57,7 @@ nerve:
     caches:
       PAGE_LIST: maximumSize=100,expireAfterWrite=10m
       NOTICE_LIST: maximumSize=1,expireAfterWrite=120m
+      APP_OVERVIEW: maximumSize=200,expireAfterWrite=30m
   # 备份功能
   backup:
     enable: false

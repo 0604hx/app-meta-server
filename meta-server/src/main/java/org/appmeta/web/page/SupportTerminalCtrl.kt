@@ -38,7 +38,7 @@ class SupportTerminalCtrl (
     private val deployer: Deployer,
     private val service: TerminalService, private val logM:TerminalLogMapper):BasicPageCtrl() {
 
-    private fun _load(aid: String) = service.load(aid)?: throw Exception("应用⌈${aid}⌋未开通后端服务或者未初始化")
+    private fun _load(aid: String) = service.load(aid)?: throw Exception("应用[${aid}]未开通后端服务或者未初始化")
 
     @PostMapping("overview", name = "后端服务运行状态")
     fun overview(@RequestBody model: IdStringModel) = _checkEditResult(_load(model.id).pid) { _, _->

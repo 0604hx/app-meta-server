@@ -22,4 +22,9 @@ class DashboardServiceTest : AppTest() {
     fun overview(){
         json(service.overview())
     }
+
+    @Test
+    fun appOverview(){
+        json(service.ofApp(""))
+    }
 }

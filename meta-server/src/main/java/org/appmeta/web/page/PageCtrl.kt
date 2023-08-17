@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.io.FileUtils
+import org.appmeta.Channels
 import org.appmeta.Channels.MOBILE
 import org.appmeta.F
 import org.appmeta.Role
@@ -147,17 +148,38 @@ class PageCtrl(
     @PostMapping("list", name = "页面列表")
     fun list(@RequestBody model: QueryModel) = resultWithData { service.list(model) }
 
-    @PostMapping("list-authable", name = "页面列表（已授权）")
-    fun listOfAuthable(@RequestBody model: QueryModel) = resultWithData {
-        val user = authHolder.get()
-        model.form["EQ_active"] = true
-
+    private fun _authableList(model: QueryModel) = authHolder.get().let { user->
         service.list(model)
             .filter { authHelper.checkService(it, user) }
             .onEach {
                 // 标记是否已经关注（没有更多的字段了哈哈，active 为筛选字段，故可以用）
                 it.active = linkS.check("${it.id}", user.id)
             }
+    }
+
+    /**
+     * 同时返回 app 信息及已经授权的页面清单
+     */
+    @PostMapping("authable", name = "应用详情及已授权页面")
+    fun listOfAuthableByApp(@RequestBody model: IdStringModel) = resultWithData {
+        val app = appM.withCache(model.id)?: throw Exception("应用[${model.id}]不存在")
+
+        mapOf(
+            "app"   to app,
+            "pages" to _authableList(
+                QueryModel().also {
+                    it.form["EQ_aid"]       = app.id
+                    it.form["EQ_active"]    = true
+                }
+            )
+        )
+    }
+
+    @PostMapping("list-authable", name = "页面列表（已授权）")
+    fun listOfAuthable(@RequestBody model: QueryModel) = resultWithData {
+        model.form["EQ_active"] = true
+
+        _authableList(model)
     }
 
     @PostMapping("list-editable", name = "页面列表（维护授权）")
@@ -191,7 +213,11 @@ class PageCtrl(
         val canServie = page.active && authHelper.checkService(page, user)
 
         appAsync.afterLaunch(
-            model,
+            model.also {
+                it.channel = getChannel()
+                it.pid = "${page.id}"
+                it.aid = page.aid
+            },
             user.id,
             requestIP
         )
@@ -203,9 +229,7 @@ class PageCtrl(
             F.NAME      to page.name,
             F.TEMPLATE  to page.template,
             F.ACTIVE    to page.active,
-            F.CONTENT   to if(canServie) { service.buildContent(page, true) } else
-                ""
-            ,
+            F.CONTENT   to if(canServie) { service.buildContent(page, true) } else "",
             "documents" to if(canServie) documentS.listByPage("${page.id}") else null
         )
         //对于移动终端，直接返回 User 信息（减少请求次数）
@@ -238,8 +262,8 @@ class PageCtrl(
             val resource = if("file".equals(appConfig.resProtocol, true)) FileSystemResource(location) else ClassPathResource(location)
 
             if(!resource.exists()) {
-                logger.error("小程序⌈${page.name}⌋未部署资源文件 $resource")
-                throw Exception("小程序⌈${page.name}⌋未部署资源文件，请联系管理员")
+                logger.error("小程序[${page.name}]未部署资源文件 $resource")
+                throw Exception("小程序[${page.name}]未部署资源文件，请联系管理员")
             }
 
             if(logger.isDebugEnabled)   logger.debug("小程序部署地址：$resource")

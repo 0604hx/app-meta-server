@@ -74,6 +74,7 @@ class PageLaunch:AppWithUser {
     var pid     = ""
     var ip      = ""
     var channel = ""        //渠道/频道
+    var depart  = ""        //部门信息
     var addOn   = 0L
 
     constructor()

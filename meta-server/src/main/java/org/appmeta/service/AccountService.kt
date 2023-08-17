@@ -12,6 +12,7 @@ import org.appmeta.component.SettingChangeEvent
 import org.appmeta.domain.*
 import org.appmeta.model.UserResultModel
 import org.mindrot.jbcrypt.BCrypt
+import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.Result
 import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.db.service.BaseService
@@ -235,5 +236,14 @@ class AccountHelper(
             if(StringUtils.hasText(user.id)) departmentM.loadByUser(user.id) else null,
             user.roles
         )
+    }
+
+    /**
+     * 返回部门描述信息
+     * id-name
+     */
+    fun getDepartByUid(uid: String): String {
+        val d = departmentM.loadByUser(uid)
+        return if(d==null) EMPTY else "${d.id}-${d.name}"
     }
 }

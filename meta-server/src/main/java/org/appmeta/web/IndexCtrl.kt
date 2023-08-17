@@ -91,7 +91,7 @@ class IndexCtrl(
                 authHelper.checkService(auth as String, it[F.UID] as String, user)
             }
             .also {
-                logger.info("${user?.showName}查询关键字 ⌈${model.text}⌋ 共 ${it.size}/${totalCount} 个结果，耗时 ${timing.toSecondStr()} 秒")
+                logger.info("${user?.showName}查询关键字 [${model.text}] 共 ${it.size}/${totalCount} 个结果，耗时 ${timing.toSecondStr()} 秒")
             }
     }
 }

@@ -28,8 +28,10 @@ import kotlin.math.abs
 
 @Service
 class AppAsync(
+    private val settingS: SettingService,
     private val config: AppConfig,
     private val mapper: AppMapper,
+    private val accountHelper: AccountHelper,
     private val launchM:PageLaunchMapper,
     private val pageM:PageMapper) {
 
@@ -54,24 +56,33 @@ class AppAsync(
     fun afterLaunch(model: PageModel, uid:String, ip:String=EMPTY) {
         val key = "${model}-${uid}-${model.channel}"
         val cur = System.currentTimeMillis()
+        if(logger.isDebugEnabled)   logger.debug("[LAUNCH] IP=$ip KEY=${key} TIME=$cur CACHE=${launchMap[key]}")
 
-        if(cur - launchMap.getOrDefault(key, 0L) > config.appLaunchWindow*60*1000){
+        val hasKey = launchMap.containsKey(key)
+        if(!hasKey || (cur - launchMap[key]!! > config.appLaunchWindow*60*1000L)){
+            if(logger.isDebugEnabled)   logger.debug("[LAUNCH] 即将记录 $uid 访问 $model 的数据...")
             modifyIncrement(model.aid, F.LAUNCH)
-            //更新页面运行计数
-            pageM.onLaunch(model.pid)
 
             if(StringUtils.hasText(model.pid)){
+                //更新页面运行计数
+                pageM.onLaunch(model.pid)
+
                 //记录信息
                 PageLaunch(model).also {
                     it.uid      = uid
                     it.ip       = ip
-                    it.channel  = model.channel
+                    it.channel  = if(StringUtils.hasText(model.channel)) model.channel else settingS.value(S.SYS_DEFAULT_CHANNEL)
+                    it.depart   = accountHelper.getDepartByUid(uid)
 
                     launchM.insert(it)
                 }
             }
+
+            launchMap[key] = cur
         }
-        launchMap[key] = cur
+        else{
+            if(!hasKey) launchMap[key] = cur
+        }
     }
 
     @Async
