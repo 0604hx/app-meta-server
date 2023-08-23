@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 
+import static org.nerve.boot.Const.COMMA;
+
 @Service
 public class SettingService extends BaseService<SettingMapper, Setting> {
 
@@ -38,6 +40,12 @@ public class SettingService extends BaseService<SettingMapper, Setting> {
 	@Cacheable("settings")
 	public String value(Enum e) {
 		return value(e.name());
+	}
+
+	@Cacheable("settings")
+	public String[] valueOfList(Enum e) {
+		String text = value(e.name());
+		return text != null ? text.trim().split(COMMA) : null;
 	}
 
 	@Cacheable("settings")

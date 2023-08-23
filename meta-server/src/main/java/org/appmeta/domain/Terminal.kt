@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Select
 import org.apache.ibatis.mapping.ResultSetType
 import org.apache.ibatis.session.ResultHandler
 import org.nerve.boot.annotation.CN
+import org.nerve.boot.domain.IDLong
 
 
 /*
@@ -50,6 +51,7 @@ class Terminal {
 @CN("后端服务记录")
 @TableName("terminal_log")
 class TerminalLog:AppWithUser {
+    var host    = ""
     var url     = ""
     var method  = ""
 
@@ -66,6 +68,17 @@ class TerminalLog:AppWithUser {
         this.url    = url
         addOn       = System.currentTimeMillis()
     }
+    constructor(aid: String, host:String, url: String):this(aid, url) {
+        this.host   = host
+    }
+}
+
+@CN("后端服务请求详细")
+class TerminalLogDetail: IDLong() {
+    var reqHeader   = ""
+    var reqBody     = ""
+    var resHeader   = ""
+    var resBody     = ""
 }
 
 @Mapper
@@ -84,3 +97,6 @@ interface TerminalLogMapper:BaseMapper<TerminalLog> {
     @ResultType(TerminalLog::class)
     fun streamByTime(time:Long, handler:ResultHandler<TerminalLog>)
 }
+
+@Mapper
+interface TerminalLogDetailMapper:BaseMapper<TerminalLogDetail>

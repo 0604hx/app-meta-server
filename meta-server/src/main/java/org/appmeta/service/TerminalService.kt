@@ -7,6 +7,7 @@ import org.appmeta.Caches
 import org.appmeta.F
 import org.appmeta.SERVER
 import org.appmeta.domain.*
+import org.appmeta.model.TerminalLogModel
 import org.appmeta.model.TerminalLogOverview
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.Pagination
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
+import org.springframework.util.StringUtils.hasText
 import java.util.*
 
 
@@ -31,7 +32,9 @@ import java.util.*
  */
 
 @Service
-class TerminalService(private val logM:TerminalLogMapper, private val pageM:PageMapper) {
+class TerminalService(
+    private val detailM:TerminalLogDetailMapper,
+    private val logM:TerminalLogMapper, private val pageM:PageMapper) {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val queryHelper = QueryHelper<TerminalLog>()
 
@@ -59,11 +62,17 @@ class TerminalService(private val logM:TerminalLogMapper, private val pageM:Page
     }
 
     @Async
-    fun addLog(log: TerminalLog) {
+    fun addLog(log: TerminalLog, detail: TerminalLogDetail?) {
         if(log.addOn > 0L)
             log.used = System.currentTimeMillis() - log.addOn
 
         logM.insert(log)
+        if(logger.isDebugEnabled)   logger.debug("[SERVICE-ROUTE] 转发请求到 ${log.url} (${log.used} ms) 保存详情=${detail != null}")
+
+        if(detail != null){
+            detail.id = log.id
+            detailM.insert(detail)
+        }
     }
 
     fun logList(params:Map<String, Any>, pagination: Pagination, aid:String=EMPTY): List<TerminalLog> {
@@ -72,7 +81,7 @@ class TerminalService(private val logM:TerminalLogMapper, private val pageM:Page
             pagination.pageSize.toLong()
         )
         val q = queryHelper.buildFromMap(params)
-        if(StringUtils.hasText(aid))    q.eq(F.AID, aid)
+        if(hasText(aid))    q.eq(F.AID, aid)
         q.orderByDesc(F.ID)
 
         logM.selectPage(p, q)
@@ -106,4 +115,21 @@ class TerminalService(private val logM:TerminalLogMapper, private val pageM:Page
 
         return TerminalLogOverview(aid, total, today, used, error)
     }
+
+    fun loadLog(id: Long) = logM.selectById(id)
+
+    fun loadLogDetail(id: Long) = detailM.selectById(id)
+
+    fun loadLast(model:TerminalLogModel):TerminalLog? = logM.selectOne(
+        QueryWrapper<TerminalLog>().also { q->
+            q.eq(hasText(model.aid),    F.AID, model.aid)
+            q.eq(hasText(model.uid),    F.UID, model.uid)
+            q.eq(hasText(model.path),   F.URL, model.path)
+            q.eq(hasText(model.ip),     F.IP, model.ip)
+            q.eq(hasText(model.channel),F.CHANNEL, model.channel)
+
+            q.orderByDesc(F.ID)
+            q.last("LIMIT 1")
+        }
+    )
 }

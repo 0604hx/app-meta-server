@@ -11,10 +11,9 @@ import org.appmeta.component.AppConfig
 import org.appmeta.component.deploy.Deployer
 import org.appmeta.domain.AppVersion
 import org.appmeta.domain.AppVersionMapper
+import org.appmeta.domain.TerminalLog
 import org.appmeta.domain.TerminalLogMapper
-import org.appmeta.model.FieldModel
-import org.appmeta.model.IdStringModel
-import org.appmeta.model.QueryModel
+import org.appmeta.model.*
 import org.appmeta.service.TerminalService
 import org.appmeta.tool.FileTool
 import org.nerve.boot.FileStore
@@ -53,6 +52,27 @@ class SupportTerminalCtrl (
     @PostMapping("stop", name = "停止后端服务")
     fun stop(@RequestBody model: IdStringModel) = _checkEditResult(_load(model.id).pid) { _, _->
         deployer.stop(model.id)
+    }
+
+    private fun _prepareLogDetail(log: TerminalLog) =  _checkServiceAuth(_load(log.aid).pid) { _, _ ->
+        TerminalDetailResult(
+            log,
+            service.loadLogDetail(log.id)
+        )
+    }
+
+    @PostMapping("trace/{id}", name = "查看特定ID的请求详情")
+    fun logOne(@PathVariable id:Long) = resultWithData {
+        val log = service.loadLog(id)?: throw Exception("请求转发记录 #$id 不存在")
+
+        _prepareLogDetail(log)
+    }
+
+    @PostMapping("trace/last", name = "查看最新一条请求")
+    fun logLast(@RequestBody model: TerminalLogModel) = resultWithData {
+        val log = service.loadLast(model)?: return@resultWithData null
+
+        _prepareLogDetail(log)
     }
 
     @RequestMapping("trace-{aid}", name = "按应用查询后端服务记录")

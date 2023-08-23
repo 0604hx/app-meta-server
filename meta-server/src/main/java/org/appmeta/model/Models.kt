@@ -2,6 +2,7 @@ package org.appmeta.model
 
 import org.appmeta.domain.App
 import org.appmeta.domain.AppProperty
+import org.appmeta.domain.AppWithUser
 import org.appmeta.domain.WithPage
 import org.nerve.boot.Pagination
 import org.springframework.util.ObjectUtils.nullSafeHashCode
@@ -80,4 +81,10 @@ class PageModel:WithPage {
     }
 
     override fun toString() = "$aid-$pid"
+}
+
+class TerminalLogModel:AppWithUser() {
+    var path    = ""
+    var channel = ""
+    var ip      = ""
 }

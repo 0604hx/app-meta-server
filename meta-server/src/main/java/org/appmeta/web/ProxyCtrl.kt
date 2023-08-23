@@ -1,5 +1,6 @@
 package org.appmeta.web
 
+import com.alibaba.fastjson2.JSON
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.Template
 import jakarta.annotation.PostConstruct
@@ -13,6 +14,8 @@ import org.appmeta.component.ServiceRoute
 import org.appmeta.component.SettingChangeEvent
 import org.appmeta.domain.Terminal
 import org.appmeta.domain.TerminalLog
+import org.appmeta.domain.TerminalLogDetail
+import org.appmeta.domain.TerminalLogDetailMapper
 import org.appmeta.service.TerminalService
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
@@ -22,11 +25,13 @@ import org.springframework.context.event.EventListener
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.springframework.util.StreamUtils
 import org.springframework.util.StringUtils.hasText
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URLEncoder
+import java.util.*
 
 
 /*
@@ -83,6 +88,7 @@ class ProxyService(private val settingS:SettingService, private val config: AppC
 
 @RestController
 class ProxyCtrl(
+    private val logDetailM:TerminalLogDetailMapper,
     private val settingS: SettingService,
     private val service: ProxyService,
     private val route: ServiceRoute, private val terminalS:TerminalService) : CommonCtrl(){
@@ -92,22 +98,57 @@ class ProxyCtrl(
         val path = request.servletPath.replace("/service/${aid}", "")
 
         val terminal = terminalS.load(aid) ?: throw Exception("应用[$aid]未开通后端服务")
-        var url = if(terminal.mode == Terminal.OUTSIDE) terminal.url else "${settingS.value(S.SYS_TERMINAL_HOST)}:${terminal.port}"
+        var host = if(terminal.mode == Terminal.OUTSIDE) terminal.url else "${settingS.value(S.SYS_TERMINAL_HOST)}:${terminal.port}"
 
-        url = "${url}${path}${if(hasText(request.queryString)) "?${request.queryString}" else ""}"
+        val url = "${host}${path}${if(hasText(request.queryString)) "?${request.queryString}" else ""}"
 
         if(logger.isDebugEnabled)    logger.debug("转发请求（APP=$aid） 到 $url")
 
         val user = authHolder.get()
 
-        val log = TerminalLog(aid, url)
+        val log = TerminalLog(aid, host, path)
         log.method  = request.method
         log.uid = user.id
         log.channel = getChannel()
 
+        var saveDetail = settingS.booleanValue(S.TERMINAL_DETAIL, false)
+        //判断渠道
+        if(saveDetail){
+            settingS.valueOfList(S.TERMINAL_CHANNEL).also {
+                if(it!=null && !it.contains(log.channel))
+                    saveDetail = false
+            }
+        }
+
+        val logDetail = if(!saveDetail) null else TerminalLogDetail()
+
         return try{
-            route.redirect( request, response, url, service.buildHeader(user) ).also {
-                log.code = it.statusCode.value()
+            val requestBody = StreamUtils.copyToByteArray(request.inputStream)
+            if(logDetail != null){
+                logDetail.reqHeader = settingS.valueOfList(S.TERMINAL_HEADER)
+                    .let { validNames->
+                        Collections.list(request.headerNames)
+                            .filter { n-> validNames.contains(n) }
+                            .associateWith { n -> request.getHeader(n) }
+                    }
+                    .let { JSON.toJSONString(it) }
+
+                //记录请求主体
+                logDetail.reqBody = String(requestBody, Charsets.UTF_8)
+            }
+
+            route.redirect( request,requestBody, response, url, service.buildHeader(user) ).also { resEntity->
+                log.code = resEntity.statusCode.value()
+
+                //记录响应值
+                if(logDetail != null){
+                    val headers = mutableMapOf<String, Any?>()
+                    resEntity.headers.mapKeys { h-> headers[h.key.lowercase()] = h.value.first() }
+                    logDetail.resHeader = JSON.toJSONString(headers)
+
+                    if(resEntity.hasBody() && resEntity.body!!.size <= settingS.intValue(S.TERMINAL_MAX, 10) * 1024L)
+                        logDetail.resBody = Base64.getEncoder().encodeToString(resEntity.body)
+                }
             }
         }
         catch (e:Exception) {
@@ -118,8 +159,7 @@ class ProxyCtrl(
             ResponseEntity(Result.fail(e), HttpStatus.INTERNAL_SERVER_ERROR)
         }
         finally {
-            terminalS.addLog(log)
-            if(logger.isDebugEnabled)   logger.debug("[SERVICE-ROUTE] 转发请求到 ${log.url} (${log.used} ms)")
+            terminalS.addLog(log, if(saveDetail) logDetail else null)
         }
     }
 }

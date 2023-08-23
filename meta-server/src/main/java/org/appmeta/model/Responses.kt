@@ -1,8 +1,6 @@
 package org.appmeta.model
 
-import org.appmeta.domain.App
-import org.appmeta.domain.Department
-import org.appmeta.domain.Page
+import org.appmeta.domain.*
 
 
 /*
@@ -34,3 +32,5 @@ class TerminalLogOverview(
     val used:Long,      //总耗时，单位 ms
     val error:Long      //错误数
 )
+
+class TerminalDetailResult(val log:TerminalLog?, val detail: TerminalLogDetail?)

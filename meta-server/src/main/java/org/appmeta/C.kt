@@ -56,6 +56,8 @@ object F {
     const val TIME      = "time"
 
     const val SOURCE_ID = "sourceId"
+    const val URL       = "url"
+    const val CHANNEL   = "channel"
 
     const val BATCH     = "batch"
     const val BATCH_    = "_batch_"
@@ -103,6 +105,10 @@ enum class S {
     AUTH_CAS_URL,
 
     APP_MICRO_INJECT,
+    TERMINAL_DETAIL,
+    TERMINAL_CHANNEL,
+    TERMINAL_HEADER,
+    TERMINAL_MAX,
 
     DBM_LIMIT,
     DBM_BATCH,

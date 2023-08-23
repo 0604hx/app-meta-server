@@ -279,6 +279,7 @@ CREATE TABLE `terminal_log` (
   `aid` varchar(100) NOT NULL COMMENT '关联应用ID',
   `uid` varchar(15) DEFAULT NULL,
   `method` varchar(10) DEFAULT '',
+  `host` varchar(100) DEFAULT '',
   `url` varchar(255) DEFAULT '',
   `code` int DEFAULT 0,
   `summary` text,
@@ -288,6 +289,17 @@ CREATE TABLE `terminal_log` (
   PRIMARY KEY (`id`),
   KEY `aid_IDX` (`aid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `terminal_log_detail` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `reqHeader` text COMMENT '请求头',
+  `reqBody` text COMMENT '请求主体（字符串）',
+  `resHeader` text COMMENT '响应头',
+  `resBody` text COMMENT '响应主体（BASE64格式，需还原成字节，然后根据响应头转码）',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 
 CREATE TABLE `member` (
   `id` varchar(30) NOT NULL,

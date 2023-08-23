@@ -113,5 +113,10 @@
   { "id": "SYS_TERMINAL_HEADER_VALUE", "title":"后端服务用户HEADER值", "category": "SYSTEM", "content": "{{ id }}-{{ name }}-{{ ip }}", "summary": "请求转发到后端服务时附带的 HEADER 内容，占位符：id=用户ID，name=用户名（URL编码），ip，time=13位时间戳" },
   { "id": "SYS_ROBOT_TRACE", "title":"持久化机器人运行信息", "category": "SYSTEM","form": "RADIO", "content": true, "summary": "记录网页机器人运行结果信息（来自客户端上传），包含但不限于任务信息、日志、耗时等，默认 true" },
   { "id": "SYS_WHITE_IP", "title":"特殊操作IP绑定", "category": "SYSTEM", "content": "", "summary": "特殊操作（包含但不限于前端更新、后端服务刷新）需要管理员权限+IP验证，多个使用英文逗号隔开" },
-  { "id": "SYS_DEFAULT_CHANNEL", "title":"默认终端类型", "category": "SYSTEM", "content": "client", "summary": "记录终端访问/调用接口信息时，若 channel 字段缺失而使用的默认值" }
+  { "id": "SYS_DEFAULT_CHANNEL", "title":"默认终端类型", "category": "SYSTEM", "content": "client", "summary": "记录终端访问/调用接口信息时，若 channel 字段缺失而使用的默认值" },
+
+  { "id": "TERMINAL_DETAIL", "title":"记录请求转发详细", "category": "TERMINAL","form": "RADIO", "content": true, "summary": "勾选后，将记录请求转发的详细信息（如HEADER、BODY）到 terminal_log_detail 表" },
+  { "id": "TERMINAL_CHANNEL", "title":"终端类型限定", "category": "TERMINAL", "content": "", "summary": "仅记录在此范围终端的请求转发详细信息（多个用英文逗号隔开）" },
+  { "id": "TERMINAL_HEADER", "title":"请求头限定", "category": "TERMINAL", "content": "content-type,user-agent", "summary": "持久化请求转发详细信息时仅记录此范围内的 HEADER（多个用英文逗号隔开）" },
+  { "id": "TERMINAL_MAX", "title":"终端类型限定", "category": "TERMINAL", "form":"NUMBER", "content": 10, "summary": "持久化请求转发详细信息时记录字节长度超过此值将被忽略，单位 KB" }
 ]
