@@ -121,12 +121,15 @@ class AccountService(
         30 * 60
     )
 
-    @Cacheable(Caches.ACCOUNT)
+    @Cacheable(Caches.ACCOUNT_ALL)
     fun listOfAll() = mapOf(
         "accounts"       to baseMapper.selectList(null),
         "departments"    to departS.list(null),
         "roles"          to roleM.selectList(null)
     )
+
+    @Cacheable(Caches.ACCOUNT)
+    fun listOfAccount() = baseMapper.selectList(null)
 
     fun listOfDepart() = departS.list()
 

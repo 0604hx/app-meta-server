@@ -102,6 +102,10 @@ interface Launchable {
     var launch:Int              //运行次数统计
 }
 
+interface LogicRemove {
+    var hide:Boolean
+}
+
 class Fastjson2TypeHandler(private val type:Class<*>): AbstractJsonTypeHandler<Any>() {
     override fun parse(json: String?) = JSON.parseObject(json, type)
 

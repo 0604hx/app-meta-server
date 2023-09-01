@@ -1,6 +1,7 @@
 package org.appmeta.domain
 
 import com.baomidou.mybatisplus.annotation.TableField
+import com.baomidou.mybatisplus.annotation.TableLogic
 import com.baomidou.mybatisplus.annotation.TableName
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.baomidou.mybatisplus.core.mapper.BaseMapper
@@ -22,12 +23,18 @@ import org.nerve.boot.annotation.CN
 
 @CN("应用数据")
 @TableName(autoResultMap = true)
-open class Data : AppWithUser {
-    var pid     = ""
-    var channel = ""
+open class Data : AppWithUser, LogicRemove {
+    var pid             = ""
+    var channel         = ""
+
     @TableField(typeHandler = Fastjson2TypeHandler::class, jdbcType = JdbcType.BLOB)
-    var v       = mapOf<String, Any>()
-    var addOn   = 0L
+    var v               = mapOf<String, Any>()
+
+    @TableLogic
+    override var hide   = false
+    var hideOn:Int?     = null
+
+    var addOn           = 0L
 
     constructor()
     constructor(aid:String, uid:String) {

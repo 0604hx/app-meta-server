@@ -1,8 +1,11 @@
 package org.appmeta.web
 
+import org.appmeta.model.KeyModel
 import org.appmeta.service.AccountService
 import org.nerve.boot.web.ctrl.BasicController
+import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -20,14 +23,24 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("account")
 class AccountCtrl(private val service:AccountService) : BasicController() {
 
-    @PostMapping("list", name = "用户及部门清单")
+    @PostMapping("all", name = "用户及部门清单")
     fun list() = resultWithData {
         service.listOfAll()
+    }
+
+    @PostMapping("users", name = "用户清单")
+    fun userList(@RequestBody model:KeyModel) = resultWithData {
+        val users = service.listOfAccount()
+
+        if(StringUtils.hasText(model.key))
+            users.filter { it.id.contains(model.key) }
+        else
+            users
     }
 
     @PostMapping("departs", name = "部门清单")
     fun departList() = resultWithData { service.listOfDepart() }
 
     @PostMapping("roles", name = "角色清单")
-    fun roleLise() = resultWithData { service.listOfRole() }
+    fun roleList() = resultWithData { service.listOfRole() }
 }

@@ -1,6 +1,15 @@
 # 数据修复 SQL 汇总
 > 每次数据表结构变更，可能会导致数据缺失，此时需要用程序或者 SQL 进行调整
 
+**Data表增加逻辑删除**
+> on 2023-09-01
+
+```sql
+ALTER TABLE data ADD hide tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除，0=显示，1=删除' AFTER v;
+ALTER TABLE data ADD `hideOn` bigint DEFAULT NULL COMMENT '删除日期，格式为 yyyMMdd 的数字' AFTER hide;
+CREATE INDEX data_hide_IDX USING BTREE ON data (hide);
+```
+
 **增加请求转发详情持久化**
 > add on 2023-08-23
  

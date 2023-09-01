@@ -134,6 +134,9 @@ class DataService(private val batchM:DataBatchMapper, private val blockM:DataBlo
         else
             wrapper.apply(StringUtils.hasText(pid), "${F.PID}={0}", pid)
 
+        //限定查询字段
+        wrapper.select(F.ID, F.PID, F.AID, F.UID, F.CHANNEL, F.V, F.ADD_ON)
+
         if(model.id>0L){
             wrapper.apply("${F.ID}={0}", model.id)
         }

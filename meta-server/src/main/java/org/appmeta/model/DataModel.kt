@@ -58,8 +58,13 @@ class QueryItem {
     }
     constructor(sql:String) {
         val tmp     = sql.split(Regex(" "), 3)
+        for (o in QueryFilter.values()){
+            if(o.action == tmp[1]){
+                op = o
+                break
+            }
+        }
         field       = tmp[0]
-        op          = QueryFilter.valueOf(tmp[1])
         value       = tmp[2]
     }
 

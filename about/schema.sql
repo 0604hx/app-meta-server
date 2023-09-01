@@ -195,10 +195,13 @@ CREATE TABLE `data` (
   `uid` varchar(15) DEFAULT NULL,
   `channel` varchar(20) DEFAULT NULL,
   `v` json DEFAULT NULL,
+  `hide` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除，0=显示，1=删除',
+  `hideOn` bigint DEFAULT NULL COMMENT '删除日期，格式为 yyyMMdd 的数字',
   `addOn` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `data_aid_IDX` (`aid`) USING BTREE,
-  KEY `data_uid_IDX` (`uid`) USING BTREE
+  KEY `data_uid_IDX` (`uid`) USING BTREE,
+  KEY `data_hide_IDX` (`hide`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- `app-meta`.`data_block` definition

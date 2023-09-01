@@ -39,6 +39,8 @@ object F {
     const val MARK      = "mark"
     const val THUMB     = "thumb"
 
+    const val V         = "v"
+
     const val ADD_ON    = "addOn"
     const val DONE_ON   = "doneOn"
 
@@ -137,6 +139,7 @@ class Auth {
 
 object Caches {
     const val ACCOUNT       = "ACCOUNT"
+    const val ACCOUNT_ALL   = "ACCOUNT_ALL"
 
     const val AUTH_USER     = "AUTH_USER"
 

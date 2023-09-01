@@ -136,8 +136,13 @@ class DataServiceTest:AppTest() {
     fun delete(){
         val model = DataDeleteModel()
         model.aid = AID
-        model.match = mutableListOf(QueryItem("ip=$IP"))
+        model.match = mutableListOf(QueryItem("ip = $IP"))
 
         service.delete(model)
+    }
+
+    @Test
+    fun deleteById(){
+        service.delete(DataDeleteModel().also { it.id =  0})
     }
 }
