@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.io.FileUtils
-import org.appmeta.Channels
 import org.appmeta.Channels.MOBILE
 import org.appmeta.F
 import org.appmeta.Role
