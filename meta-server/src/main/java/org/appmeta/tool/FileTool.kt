@@ -1,5 +1,6 @@
 package org.appmeta.tool
 
+import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.input.ReversedLinesFileReader
 import java.io.File
 import java.io.FileInputStream
@@ -110,4 +111,13 @@ object FileTool {
                 }
                 lines
             }
+
+    /**
+     * 检查文件后缀名是否符合要求
+     */
+    fun checkExt(filename:String, vararg exts:String):String =
+        FilenameUtils.getExtension(filename).also {ext->
+            if(!exts.any { it.equals(ext, true) })
+                throw Exception("文件格式[$ext]不支持，请使用${exts}")
+        }
 }

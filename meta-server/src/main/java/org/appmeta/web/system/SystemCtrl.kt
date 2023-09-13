@@ -2,13 +2,16 @@ package org.appmeta.web.system
 
 import jakarta.annotation.Resource
 import jakarta.servlet.http.HttpServletResponse
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.input.ReversedLinesFileReader
 import org.appmeta.*
 import org.appmeta.component.SystemConfig
 import org.appmeta.model.FieldModel
 import org.appmeta.model.SizeModel
+import org.appmeta.tool.FileTool
 import org.nerve.boot.Const.COMMA
+import org.nerve.boot.FileStore
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.module.operation.Operation
 import org.nerve.boot.module.setting.SettingService
@@ -65,7 +68,34 @@ class SystemHelper {
 
 @RestController
 @RequestMapping("system")
-class SystemCtrl(private val helper: SystemHelper, private val sysConfig:SystemConfig) : BasicSystemCtrl() {
+class SystemCtrl(
+    private val fileStore: FileStore,
+    private val helper: SystemHelper, private val sysConfig:SystemConfig) : BasicSystemCtrl() {
+
+    /**
+     * 更新客户端程序包，同意保存到 attach/client 目录下
+     * 对于全量包，名称为 meta-client.7z
+     * 增量包则是 yyyyMMddHHmmss.7z
+     *
+     * @param file  文件包
+     * @param increment 是否为增量包（常用于 electron-builder 更新包）
+     */
+    @PostMapping("update-client", name = "更新客户端程序包")
+    fun updateClient(
+        @RequestPart("file") file:MultipartFile,
+        @RequestParam("increment", required = false, defaultValue = "false") increment:Boolean=false
+    ) = resultWithData {
+        adminAndWhiteIP().let { user->
+            val ext = FileTool.checkExt(file.originalFilename!!, "7z", "zip")
+            val path = fileStore.buildPathWithoutDate("${if(increment) DateUtil.getDateTimeSimple() else "meta-client"}.${ext}", "client")
+            if(!Files.exists(path.parent))
+                Files.createDirectories(path.parent)
+
+            FileUtils.copyToFile(file.inputStream, path.toFile())
+            opLog("${user.showName}在${requestIP}上传客户端程序包（增量=${increment}），保存到$path", null, Operation.IMPORT)
+            "客户端程序包更新完成，下载地址为 $path"
+        }
+    }
 
     @RequestMapping("restart", name = "重启后端")
     fun restart() = result {
@@ -82,8 +112,9 @@ class SystemCtrl(private val helper: SystemHelper, private val sysConfig:SystemC
         val user = adminAndWhiteIP()
         opLog("${user.showName} 在 $requestIP 上传 ${file.originalFilename}(size=${file.size}) 以更新后端 JAR...", null, Operation.MODIFY)
 
-        val ext = FilenameUtils.getExtension(file.originalFilename)
-        Assert.isTrue(ext.uppercase() == "JAR", "文件格式不支持")
+//        val ext = FilenameUtils.getExtension(file.originalFilename)
+//        Assert.isTrue(ext.uppercase() == "JAR", "文件格式不支持")
+        FileTool.checkExt(file.originalFilename!!, "jar")
 
         val jarFile = Paths.get(sysConfig.jarName).also {
             if(Files.exists(it)){
