@@ -44,7 +44,7 @@ class MemberService(private val jwtTool: JWTTool) : BaseService<MemberMapper, Me
             //判断是否为允许登录的ID
             member.ids.split(COMMA).firstOrNull { matcher.match(it.trim(), uid) }?: throw Exception("$uid 不允许通过此终端登录")
 
-            logger.info("$uid 在终端 ${ip} 授权登录，有效期 ${member.expire} 分钟")
+            logger.info("$uid 在终端 $ip 授权登录，有效期 ${member.expire} 分钟")
             jwtTool.create(uid, ip, member.expire)
         }
     }
