@@ -20,8 +20,19 @@ import org.nerve.boot.annotation.CN
 @CN("会员终端")
 @TableName("member")
 class Member : SummaryBean {
+    companion object {
+        const val CLI		= "cli"		//命令行终端
+        const val WORKER    = "worker"  //远程工作者
+        const val OTHER 	= "other"	//其他
+    }
+
     var ids     = ""        //允许登录的ID，多个用英文逗号隔开
+    var category= CLI       //
+
     var secret  = ""        //AES 密钥
+    var pubKey  = ""
+    var priKey  = ""
+
     var expire  = 60        //令牌有限期，默认是 60 分钟
     var addOn   = 0L
 

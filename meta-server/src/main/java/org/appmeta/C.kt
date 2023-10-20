@@ -61,6 +61,10 @@ object F {
     const val URL       = "url"
     const val CHANNEL   = "channel"
 
+    const val PUB_KEY   = "pubKey"
+    const val PRI_KEY   = "priKey"
+    const val SECRET    = "secret"
+
     const val BATCH     = "batch"
     const val BATCH_    = "_batch_"
     const val USER      = "user"

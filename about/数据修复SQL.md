@@ -1,6 +1,15 @@
 # 数据修复 SQL 汇总
 > 每次数据表结构变更，可能会导致数据缺失，此时需要用程序或者 SQL 进行调整
 
+**Member表增加密钥对**
+> on 2023-10-19
+
+```sql
+ALTER TABLE `app-meta`.`member` ADD category varchar(10) DEFAULT '' NOT NULL COMMENT 'cli=命令行终端；worker=工作者；other=其他' AFTER ids;
+ALTER TABLE `app-meta`.`member` ADD pubKey text NULL AFTER secret;
+ALTER TABLE `app-meta`.`member` ADD priKey text NULL AFTER secret;
+```
+
 **Data表增加逻辑删除**
 > on 2023-09-01
 

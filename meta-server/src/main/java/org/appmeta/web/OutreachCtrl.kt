@@ -1,9 +1,12 @@
 package org.appmeta.web
 
+import org.appmeta.F
 import org.appmeta.service.MemberService
 import org.nerve.boot.util.AESProvider
+import org.nerve.boot.util.RSAProvider
 import org.nerve.boot.web.ctrl.BasicController
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.*
@@ -28,4 +31,13 @@ class OutreachCtrl(private val memberS:MemberService):BasicController() {
 
     @GetMapping("create-aes-key", name = "创建 AES 密钥")
     fun createAESKey() = AESProvider().creatKey()
+
+    @PostMapping("create-rsa-key", name = "创建 RSA 密钥对")
+    fun createRSAKey() = resultWithData {
+        val rsa = RSAProvider()
+        mapOf(
+            F.PUB_KEY to rsa.publicKey,
+            F.PRI_KEY to rsa.privateKey
+        )
+    }
 }

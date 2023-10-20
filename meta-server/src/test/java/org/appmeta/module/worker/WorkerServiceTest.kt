@@ -2,9 +2,8 @@ package org.appmeta.module.worker
 
 import org.appmeta.F
 import org.junit.jupiter.api.Test
+import org.nerve.boot.util.AESProvider
 import org.nerve.boot.util.RSAProvider
-import java.io.File
-import java.io.FileWriter
 
 
 /*
@@ -76,6 +75,7 @@ class WorkerServiceTest {
 
     @Test
     fun createRSAKey(){
+        println("AES密钥：${AESProvider().creatKey()}")
         RSAProvider().also {
             println("公钥：${it.publicKey}")
             println("私钥：${it.privateKey}")
