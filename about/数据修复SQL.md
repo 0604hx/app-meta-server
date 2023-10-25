@@ -5,9 +5,12 @@
 > on 2023-10-19
 
 ```sql
+ALTER TABLE `app-meta`.`member` ADD uuid varchar(100) NULL AFTER id;
 ALTER TABLE `app-meta`.`member` ADD category varchar(10) DEFAULT '' NOT NULL COMMENT 'cli=命令行终端；worker=工作者；other=其他' AFTER ids;
 ALTER TABLE `app-meta`.`member` ADD pubKey text NULL AFTER secret;
 ALTER TABLE `app-meta`.`member` ADD priKey text NULL AFTER secret;
+ALTER TABLE `app-meta`.`member` ADD mode tinyint(1) NOT NULL DEFAULT '0' COMMENT '交互模式（0=默认，1=轮询）' AFTER category;
+ALTER TABLE `app-meta`.data_robot ADD link varchar(100) NULL AFTER logs;
 ```
 
 **Data表增加逻辑删除**

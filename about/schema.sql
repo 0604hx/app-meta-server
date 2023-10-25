@@ -244,6 +244,7 @@ CREATE TABLE `data_robot` (
   `params` TEXT,
   `origin` TEXT,
   `logs` TEXT,
+  `link` varchar(100),
   `addOn` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `data_aid_IDX` (`aid`) USING BTREE,
@@ -306,9 +307,11 @@ CREATE TABLE `terminal_log_detail` (
 
 CREATE TABLE `member` (
   `id` varchar(30) NOT NULL,
+  `uuid` varchar(100) DEFAULT NULL,
   `name` varchar(100) DEFAULT NULL,
   `ids` varchar(255) NOT NULL COMMENT '授权用户ID',
   `category` varchar(10) NOT NULL DEFAULT '' COMMENT 'cli=命令行终端；worker=工作者；other=其他',
+  `mode` tinyint NOT NULL DEFAULT '0',
   `secret` varchar(32) DEFAULT '',
   `pubKey` text,
   `priKey` text,
@@ -318,6 +321,20 @@ CREATE TABLE `member` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `worker_task` (
+  `id` varchar(100) NOT NULL,
+  `uid` varchar(20) NOT NULL,
+  `worker` varchar(100) NOT NULL,
+  `method` varchar(100) NOT NULL,
+  `params` json DEFAULT NULL,
+  `status` varchar(10) NOT NULL DEFAULT 'PENDING',
+  `response` text,
+  `doneOn` bigint DEFAULT NULL,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `worker_task_method_IDX` (`method`) USING BTREE,
+  KEY `worker_task_worker_IDX` (`worker`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `dbm_source` (
   `id` bigint NOT NULL AUTO_INCREMENT,

@@ -88,3 +88,13 @@ class TerminalLogModel:AppWithUser() {
     var channel = ""
     var ip      = ""
 }
+
+/**
+ * 机器人远程执行
+ */
+class RemoteRobotModel {
+    var uid     = ""
+    var robotId = ""
+    var worker  = ""
+    var params  = mutableMapOf<String, Any>()
+}

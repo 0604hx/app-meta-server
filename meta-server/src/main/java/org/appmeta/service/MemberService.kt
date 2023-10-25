@@ -51,7 +51,7 @@ class MemberService(private val jwtTool: JWTTool) : BaseService<MemberMapper, Me
 
     fun add(bean: Member) {
         Assert.hasText(bean.id, "终端IP必须填写")
-        Assert.isTrue(bean.expire <= 120, "有限期不能超过 120")
+        Assert.isTrue(bean.expire <= 1440, "有限期不能超过 24 小时")
 
         if(count(Q().eq(F.ID, bean.id))<=0){
             bean.addOn = System.currentTimeMillis()

@@ -3,6 +3,7 @@ package org.appmeta.domain
 import com.baomidou.mybatisplus.annotation.TableName
 import com.baomidou.mybatisplus.core.mapper.BaseMapper
 import org.apache.ibatis.annotations.Mapper
+import org.apache.ibatis.annotations.Select
 import org.nerve.boot.annotation.CN
 
 
@@ -28,6 +29,7 @@ class Member : SummaryBean {
 
     var ids     = ""        //允许登录的ID，多个用英文逗号隔开
     var category= CLI       //
+    var mode    = 0         //模式，0=默认，1=轮询（目前仅针对 Worker，即客户端轮询查询任务，用于网络无法从服务端到客户端的场景）
 
     var secret  = ""        //AES 密钥
     var pubKey  = ""
@@ -43,4 +45,8 @@ class Member : SummaryBean {
 }
 
 @Mapper
-interface MemberMapper:BaseMapper<Member>
+interface MemberMapper:BaseMapper<Member> {
+
+    @Select("SELECT * FROM member WHERE id=#{0} OR uuid=#{0} LIMIT 1")
+    fun loadByIdOrUuid(id:String):Member?
+}

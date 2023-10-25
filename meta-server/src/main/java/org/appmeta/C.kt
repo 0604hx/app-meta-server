@@ -33,6 +33,9 @@ object F {
     const val FROM_DATE = "fromDate"
     const val TO_DATE   = "toDate"
     const val DEPART    = "depart"
+    const val DATA      = "data"
+    const val RESPONSE  = "response"
+    const val METHOD    = "method"
 
     const val TYPE      = "type"
     const val LAUNCH    = "launch"
@@ -41,6 +44,8 @@ object F {
 
     const val V         = "v"
 
+    const val STATUS    = "status"
+    const val DONE      = "done"
     const val ADD_ON    = "addOn"
     const val DONE_ON   = "doneOn"
 
@@ -65,6 +70,7 @@ object F {
     const val PRI_KEY   = "priKey"
     const val SECRET    = "secret"
 
+    const val PARAMS    = "params"
     const val BATCH     = "batch"
     const val BATCH_    = "_batch_"
     const val USER      = "user"

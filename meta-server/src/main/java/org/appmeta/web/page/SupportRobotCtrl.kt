@@ -1,12 +1,16 @@
 package org.appmeta.web.page
 
+import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONWriter
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import org.appmeta.S
+import org.appmeta.component.RobotFinishEvent
 import org.appmeta.domain.RobotLog
 import org.appmeta.domain.RobotLogMapper
 import org.appmeta.model.QueryModel
 import org.nerve.boot.db.service.QueryHelper
 import org.nerve.boot.module.setting.SettingService
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -24,7 +28,9 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("page/robot")
-class SupportRobotCtrl(private val settingS:SettingService, private val mapper:RobotLogMapper) : BasicPageCtrl() {
+class SupportRobotCtrl(
+    private val eventPublisher: ApplicationEventPublisher,
+    private val settingS:SettingService, private val mapper:RobotLogMapper) : BasicPageCtrl() {
 
     @PostMapping("save", name = "保存机器人运行记录")
     fun save(@RequestBody log:RobotLog) = if(settingS.booleanValue(S.SYS_ROBOT_TRACE, true))
@@ -33,8 +39,11 @@ class SupportRobotCtrl(private val settingS:SettingService, private val mapper:R
             log.addOn = System.currentTimeMillis()
             log.ip = requestIP
 
+            if(logger.isDebugEnabled)   logger.debug("ROBOT 运行记录：\n{}", JSON.toJSONString(log, JSONWriter.Feature.PrettyFormat))
             mapper.insert(log)
             logger.info("保存来自 ${log.ip} 的 ROBOT 记录 PID=${log.pid} OS=${log.os} CHROME=${log.chrome} 耗时=${log.used} 秒")
+
+            eventPublisher.publishEvent(RobotFinishEvent(log))
             log.id
         }
     else

@@ -84,7 +84,7 @@ class DataBatch : AppWithUser {
 
 @CN("机器人执行记录")
 @TableName("data_robot")
-class RobotLog : AppWithUser {
+class RobotLog() : AppWithUser() {
     var pid     = ""
     var startOn = 0L
     var used    = 0L
@@ -96,9 +96,17 @@ class RobotLog : AppWithUser {
     var origin  = ""
     var logs    = ""
 
-    var addOn   = 0L
+    /**
+     * add on 2023-10-25
+     * 关联对象，通常是工作者任务
+     * 此属性有值时，会自动更新关联工作者任务的状态
+     */
+    var link:String? = null
 
-    constructor()
+    @TableField(exist = false)
+    var caches  = mapOf<String, Any?>()
+
+    var addOn   = 0L
 }
 
 @Mapper
