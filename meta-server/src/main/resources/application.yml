@@ -54,6 +54,7 @@ nerve:
       - /account/**
       - /worker/run-robot
       - /worker/status
+      - /worker/fetch/**
   cache:
     # caches 为 Map<String, String> 对象
     # 建议不使用 - 或者中文 作为 key，实在需要 key 包含 - 或者中文，则使用双引号包起来
