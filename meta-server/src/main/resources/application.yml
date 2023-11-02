@@ -34,6 +34,7 @@ nerve:
       - /icons.png
       - /VERSION.txt
       - /www/**
+      - /s/**
       - /time
       - /welcome
       - /login_with_pwd
