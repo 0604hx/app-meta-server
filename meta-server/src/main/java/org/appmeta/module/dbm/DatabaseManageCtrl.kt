@@ -97,6 +97,9 @@ class DatabaseSourceCtrl(
 @RequestMapping("dbm/auth")
 class DatabaseAuthCtrl(private val mapper: DatabaseAuthMapper):BasicController() {
 
+    //清空缓存
+    private fun _cleanCache(uid:String) = CacheManage.clearWithPrefix("DBM-${uid}")
+
     @RequestMapping("list", name = "数据源权限列表")
     fun list() = resultWithData { mapper.selectList(null) }
 
@@ -112,14 +115,15 @@ class DatabaseAuthCtrl(private val mapper: DatabaseAuthMapper):BasicController()
         else
             mapper.insert(auth)
 
-        //清空缓存
-        CacheManage.clearWithPrefix("DBM-${auth.uid}")
+        _cleanCache(auth.uid)
     }
 
     @RequestMapping("delete", name = "数据源权限删除")
     fun delete(@RequestBody model:IdModel) = result {
         mapper.selectById(model.id)?.let {
             mapper.deleteById(model.id)
+            _cleanCache(it.uid)
+
             opLog("删除数据源权限 ID=${model.id}", it, Operation.DELETE)
         }
     }

@@ -98,7 +98,7 @@ class ProxyCtrl(
         val path = request.servletPath.replace("/service/${aid}", "")
 
         val terminal = terminalS.load(aid) ?: throw Exception("应用[$aid]未开通后端服务")
-        var host = if(terminal.mode == Terminal.OUTSIDE) terminal.url else "${settingS.value(S.SYS_TERMINAL_HOST)}:${terminal.port}"
+        val host = if(terminal.mode == Terminal.OUTSIDE) terminal.url else "${settingS.value(S.SYS_TERMINAL_HOST)}:${terminal.port}"
 
         val url = "${host}${path}${if(hasText(request.queryString)) "?${request.queryString}" else ""}"
 

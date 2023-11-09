@@ -156,9 +156,9 @@ class SupportTerminalCtrl (
         _checkServiceAuth(_load(model.id as String).pid) { page, user ->
             val path = model.key.let { dir->
                 val p = if(StringUtils.hasText(dir)) dir else ""
-                var root = Paths.get(config.terminalPath, page.aid)
+                val root = Paths.get(config.terminalPath, page.aid)
                 logger.info("${user.showName} 尝试访问 应用#${page.aid} 的文件 $p")
-                var target = root.resolve(p)
+                val target = root.resolve(p)
 
                 if(!target.startsWith(root))    throw Exception("非法路径 $p")
 
@@ -168,25 +168,32 @@ class SupportTerminalCtrl (
 
             val isFile = path.isRegularFile()
 
-            if(model.value == "download"){
-                if(!isFile) throw Exception("应用#${page.aid}下 $path 是一个目录，不支持下载")
+            when (model.value) {
+                "download" -> {
+                    if(!isFile) throw Exception("应用#${page.aid}下 $path 是一个目录，不支持下载")
 
-                downloadFile(response, path.toFile(), path.name) {
-                    opLog("${user.showName} 在 $requestIP 下载应用#${page.aid} 的文件 $path", null, Operation.EXPORT)
+                    downloadFile(response, path.toFile(), path.name) {
+                        opLog("${user.showName} 在 $requestIP 下载应用#${page.aid} 的文件 $path", null, Operation.EXPORT)
+                    }
                 }
-            }
-            else{
-                initResponse(response)
-                write(response, JSON.toJSONString(
-                    Result().setData(
-                        mapOf(
-                            "file"      to _buildFileItem(path),
-                            F.CONTENT   to if(isFile) FileTool.readLines(path, false) else {
-                                Files.list(path).map { _buildFileItem(it) }.toList()
-                            }
+                //add on 2023-11-07
+                "delete" -> {
+                    Files.deleteIfExists(path)
+                    opLog("${user.showName} 在 $requestIP 删除应用#${page.aid} 的文件 $path", null, Operation.DELETE)
+                }
+                else -> {
+                    initResponse(response)
+                    write(response, JSON.toJSONString(
+                        Result().setData(
+                            mapOf(
+                                "file"      to _buildFileItem(path),
+                                F.CONTENT   to if(isFile) FileTool.readLines(path, false) else {
+                                    Files.list(path).map { _buildFileItem(it) }.toList()
+                                }
+                            )
                         )
-                    )
-                ))
+                    ))
+                }
             }
         }
 }

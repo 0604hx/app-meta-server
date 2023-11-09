@@ -1,6 +1,8 @@
 package org.appmeta;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.annotation.MapperScans;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,7 +17,18 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @SpringBootApplication
 @ComponentScan({"org.appmeta", "org.nerve"})
+/*
+update on 2023-11-08
+通过 @MapperScans 配置不同的扫描方式
+针对 org.appmeta 下只扫描 @Mapper 的接口
+
+旧版配置方式为：
 @MapperScan({"org.nerve.boot.module", "org.appmeta.domain", "org.appmeta.module"})
+ */
+@MapperScans({
+        @MapperScan("org.nerve.boot.module"),
+        @MapperScan(value = {"org.appmeta.domain", "org.appmeta.module"}, annotationClass = Mapper.class)
+})
 public class AppMetaServer {
 
     private static ConfigurableApplicationContext context;

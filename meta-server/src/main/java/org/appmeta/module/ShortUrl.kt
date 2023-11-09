@@ -7,18 +7,26 @@ import jakarta.servlet.http.HttpServletResponse
 import org.apache.ibatis.annotations.Mapper
 import org.appmeta.F
 import org.appmeta.model.TextModel
+import org.nerve.boot.Const
 import org.nerve.boot.annotation.CN
 import org.nerve.boot.db.StringEntity
 import org.nerve.boot.util.MD5Util
 import org.nerve.boot.web.ctrl.BasicController
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.annotation.Order
+import org.springframework.stereotype.Component
 import org.springframework.util.Assert
+import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 
 /*
@@ -30,24 +38,78 @@ import org.springframework.web.bind.annotation.RestController
  * --------------------------------------------------------------
  */
 
-@CN("短链接")
-@TableName
-class ShortUrl:StringEntity {
-    var url     = ""
+interface ShortUrlProvier {
+    fun get(uuid:String):String?
 
-    constructor()
-    constructor(id:String, url:String){
-        setId(id)
-        this.url = url
+    fun exit(uuid: String):Boolean
+
+    fun add(uuid: String, url:String)
+}
+
+//@CN("短链接")
+//@TableName
+//class ShortUrl:StringEntity {
+//    var url     = ""
+//
+//    constructor()
+//    constructor(id:String, url:String){
+//        setId(id)
+//        this.url = url
+//    }
+//}
+//
+//@Mapper
+//interface ShortUrlMapper:BaseMapper<ShortUrl>
+//
+//@Component
+//class ShortUrlDbProvider(private val mapper: ShortUrlMapper):ShortUrlProvier {
+//
+//    override fun get(uuid: String) = mapper.selectById(uuid)?.url
+//
+//    override fun exit(uuid: String) = mapper.exists(QueryWrapper<ShortUrl>().eq(F.ID, uuid))
+//
+//    override fun add(uuid: String, url: String) {
+//        mapper.insert(ShortUrl(uuid, url))
+//    }
+//}
+
+@Component
+class ShortUrlFileProvider:ShortUrlProvier {
+    /**
+     * 默认使用同目录下的 routes 作为数据存储目录
+     */
+    private val dataPath = Paths.get("shorturl.txt")
+    private val map = mutableMapOf<String, String>()
+
+    private fun loadFromFile() = Files.readAllLines(dataPath).forEach{ line->
+        val t = StringUtils.split(line, Const.SPACE)?: return@forEach
+        map[t[0]] = t[1]
+    }
+
+    override fun get(uuid: String): String? {
+        if(map.isEmpty())   loadFromFile()
+        return map[uuid]
+    }
+
+    override fun exit(uuid: String) = map.containsKey(uuid)
+
+    override fun add(uuid: String, url: String) {
+        map[uuid] = url
+
+        Files.write(
+            dataPath,
+            map.map { "${it.key} ${it.value}" },
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING
+        )
     }
 }
 
-@Mapper
-interface ShortUrlMapper:BaseMapper<ShortUrl>
-
 @Order(Int.MAX_VALUE)
-@RestController("s")
-class ShortUrlCtrl(private val mapper: ShortUrlMapper):BasicController() {
+@RestController
+@RequestMapping("s")
+class ShortUrlCtrl(private val provier: ShortUrlProvier):BasicController() {
     @Value("\${server.servlet.context-path}")
     private val contextPath = ""
 
@@ -56,19 +118,18 @@ class ShortUrlCtrl(private val mapper: ShortUrlMapper):BasicController() {
         Assert.isTrue(model.text.startsWith("/"), "长链接必须以 / 开头")
 
         MD5Util.encode(model.text).substring(8, 16).also {
-            if (mapper.exists(QueryWrapper<ShortUrl>().eq(F.ID, it)))   throw Exception("短链接已存在")
-
-            val short = ShortUrl(it, model.text)
-            mapper.insert(short)
-            logger.info("创建短链接 $it >> ${model.text}")
+            if(!provier.exit(it)){
+                provier.add(it, model.text)
+                logger.info("创建短链接 $it >> ${model.text}")
+            }
         }
     }
 
     @GetMapping("{uuid}", name = "短链接自动跳转")
     fun shortUrl(@PathVariable uuid:String, response: HttpServletResponse) {
-        val short = mapper.selectById(uuid)?: throw Exception("短链接不存在")
+        val url = provier.get(uuid)?: throw Exception("短链接不存在")
 
-        logger.info("短链接跳转 $uuid >> ${short.url}")
-        response.sendRedirect("${contextPath}${short.url}")
+        logger.info("短链接跳转 $uuid >> ${url}")
+        response.sendRedirect("${contextPath}${url}")
     }
 }
