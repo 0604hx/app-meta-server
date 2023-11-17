@@ -61,7 +61,7 @@ public class UserAuthRecognizerImpl implements UserAuthRecognizer {
                             }
                         }
                     }
-                    logger.info("缓存 {} 的授权 URL：{}",url, user.getId(), StringUtils.join(userUrls, COMMA));
+                    logger.info("缓存 {} 的授权 URL：{}", user.getId(), StringUtils.join(userUrls, COMMA));
                     return userUrls;
                 },
                 3600            //默认缓存 1 个小时
@@ -80,7 +80,7 @@ public class UserAuthRecognizerImpl implements UserAuthRecognizer {
         RoleLink link = null;
         try {
             link = loadRoleLink(user);
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
         return link != null && link.hasRole(roleId);
     }
 
@@ -97,7 +97,7 @@ public class UserAuthRecognizerImpl implements UserAuthRecognizer {
             final RoleLink link = loadRoleLink(user);
             if(link != null && StringUtils.isNotEmpty(StringUtils.trim(link.getRoles())))
                 Collections.addAll(roles, link.getRoles().split(COMMA));
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
         return roles;
     }
 

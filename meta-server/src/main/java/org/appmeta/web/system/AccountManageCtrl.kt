@@ -1,5 +1,6 @@
 package org.appmeta.web.system
 
+import org.appmeta.Role
 import org.appmeta.S
 import org.appmeta.domain.Account
 import org.appmeta.model.FieldModel
@@ -59,6 +60,12 @@ class AccountManageCtrl(
     fun remove(@PathVariable id:Long) = resultWithData {
         val account = service.getById(id)
         if(account != null){
+            //判断是否为管理员
+            val roleLink = roleLinkM.selectById(id)?: RoleLink()
+            if(roleLink.hasRole(Role.ADMIN.name)){
+                throw Exception("${account.name}(${account.id})具备角色[管理员/${Role.ADMIN}]，不能直接删除")
+            }
+
             service.removeById(account)
             opLog("删除用户 $account", account, Operation.DELETE)
         }
@@ -78,6 +85,13 @@ class AccountManageCtrl(
 
     @PostMapping("update-role", name = "更新用户角色")
     fun updateRole(@RequestBody model: FieldModel) = result {
+        val user = authHolder.get()
+        //仅允许管理员操作管理员的权限
+        val roleValue = model.value.toString()
+        if(roleValue.uppercase().split(COMMA).contains(Role.ADMIN.name)){
+            if(!user.hasRole(Role.ADMIN))   throw Exception("[管理员/${Role.ADMIN}]权限仅限管理员操作")
+        }
+
         val account = service.getById(model.id)?: throw Exception("用户#${model.id}不存在")
 
         val roleLink = roleLinkM.selectById(model.id)?: RoleLink().also {
@@ -88,8 +102,8 @@ class AccountManageCtrl(
         }
 
         roleLink.roles = if(model.key == "add" || model.key == "remove"){
-            Assert.isTrue(!ObjectUtils.isEmpty(model.value), "角色参数不能为空")
-            val role = roleM.selectById(model.value as String)?: throw Exception("角色 ${model.value} 不存在")
+            Assert.isTrue(!StringUtils.hasText(roleValue), "角色参数不能为空")
+            val role = roleM.selectById(roleValue)?: throw Exception("角色 $roleValue 不存在")
 
             val roles = roleLink.roles.split(COMMA).map { it.trim() }.toMutableSet()
             if(model.key == "add")
@@ -99,12 +113,12 @@ class AccountManageCtrl(
             roles.filter { StringUtils.hasText(it) }.joinToString(COMMA)
         }
         else{
-            model.value.toString()
+            roleValue
         }
 
         if(roleLink.using()){
             roleLinkM.updateById(roleLink)
-            opLog("更新 ${account.id} 的角色：action=${model.key} value=${model.value}", roleLink)
+            opLog("更新 ${account.id} 的角色：action=${model.key} value=${roleValue}", roleLink)
         }
         else{
             roleLink.id = account.id
