@@ -12,6 +12,8 @@ import org.appmeta.domain.Terminal
 import org.appmeta.domain.Terminal.Companion.LANG_JAVA
 import org.appmeta.domain.Terminal.Companion.LANG_NODE
 import org.appmeta.tool.FileTool
+import org.appmeta.tool.FileTool.UNZIP_OVERWRITE
+import org.appmeta.tool.FileTool.UNZIP_SKIP_ON_EXIST
 import org.appmeta.tool.OSTool
 import org.nerve.boot.Const.EMPTY
 import org.slf4j.LoggerFactory
@@ -63,7 +65,7 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
 
         if(codeFile.extension.uppercase() == "ZIP") {
             // 如果是压缩文件，则解压到 dir 目录下
-            FileTool.unzip(codeFile, dir, FileTool.UNZIP_SKIP_ON_EXIST)
+            FileTool.unzip(codeFile, dir, if(config.terminalZipOver) UNZIP_OVERWRITE else UNZIP_SKIP_ON_EXIST)
         }
         else{
             val entryFile = dir.resolve(codeFile.name).toFile()

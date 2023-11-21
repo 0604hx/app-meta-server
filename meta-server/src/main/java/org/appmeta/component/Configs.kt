@@ -1,5 +1,6 @@
 package org.appmeta.component
 
+import org.appmeta.tool.FileTool
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 
@@ -42,6 +43,7 @@ class AppConfig {
     var terminalPath    = "terminal"        //后端服务部署的目录
     var terminalStart   = "terminal.config.js"
     var terminalConfig  = "config.json"     //默认的配置文件
+    var terminalZipOver = true              //压缩包解压时，是否覆盖旧文件
 
     var headerChannel   = "CHANNEL"
 
