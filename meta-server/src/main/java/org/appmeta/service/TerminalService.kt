@@ -42,7 +42,7 @@ class TerminalService(
      * 判断应用是否能使用对应的端口，不能重复
      */
     fun checkPortUsable(aid:String, port:Int): Boolean {
-        val terminals = pageM.selectObjs(
+        val terminals = pageM.selectObjs<String>(
                 QueryWrapper<Page>().eq(F.TEMPLATE, SERVER).ne(F.AID, aid).select(F.CONTENT)
             )
             .map { JSON.parseObject(it.toString(), Terminal::class.java) }

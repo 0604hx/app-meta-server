@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URLDecoder
 import java.util.*
 
-class UseSQLException(val msg:String="该功能暂未支持，请使用 SQL 方式"):RuntimeException(msg)
+class UseSQLException(msg:String="该功能暂未支持，请使用 SQL 方式"):RuntimeException(msg)
 
 @RestController
 @RequestMapping("dbm/source")
@@ -49,7 +49,7 @@ class DatabaseSourceCtrl(
             if(H.hasAnyRole(user, Role.ADMIN, Role.DBM_ADMIN))
                 sources
             else
-                authMapper.selectObjs(QueryWrapper<DatabaseAuth>().eq(F.UID, user.id).select(F.SOURCE_ID))
+                authMapper.selectObjs<Int>(QueryWrapper<DatabaseAuth>().eq(F.UID, user.id).select(F.SOURCE_ID))
                     .let { ids->
                         if(ids.isEmpty())
                             emptyList<DatabaseSource>()

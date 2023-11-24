@@ -19,7 +19,7 @@
         <mime4j.version>0.8.7</mime4j.version>
         <tika.version>2.5.0</tika.version>
         <slf4j.version>2.0.5</slf4j.version>
-        <easyexcel.version>3.2.1</easyexcel.version>
+        <easyexcel.version>3.3.2</easyexcel.version>
     </properties>
 
     <dependencies>
@@ -64,6 +64,18 @@
             <groupId>net.coobird</groupId>
             <artifactId>thumbnailator</artifactId>
             <version>0.4.20</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.pty4j</groupId>
+            <artifactId>pty4j</artifactId>
+            <version>0.12.13</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
