@@ -36,7 +36,7 @@ class TerminalServiceTest : AppTest() {
     @Test
     fun changeSetting(){
         getUser().let {user->
-            println(proxyService.buildHeader(user))
+            println(proxyService.buildHeader("", user))
 
             publisher.publishEvent(
                 SettingChangeEvent(Setting().also {
@@ -46,7 +46,7 @@ class TerminalServiceTest : AppTest() {
             )
 
             Thread.sleep(4000)
-            println(proxyService.buildHeader(user))
+            println(proxyService.buildHeader("", user))
         }
     }
 }

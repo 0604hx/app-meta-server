@@ -16,6 +16,7 @@ import org.appmeta.domain.Terminal
 import org.appmeta.domain.TerminalLog
 import org.appmeta.domain.TerminalLogDetail
 import org.appmeta.domain.TerminalLogDetailMapper
+import org.appmeta.service.AppRoleService
 import org.appmeta.service.TerminalService
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
@@ -50,7 +51,9 @@ import java.util.*
 
 
 @Service
-class ProxyService(private val settingS:SettingService, private val config: AppConfig){
+class ProxyService(
+    private val appRoleService: AppRoleService,
+    private val settingS:SettingService, private val config: AppConfig){
     val logger = LoggerFactory.getLogger(javaClass)
 
     lateinit var template:Template
@@ -72,18 +75,22 @@ class ProxyService(private val settingS:SettingService, private val config: AppC
         logger.info("[TEMPLATE] $SYS_TERMINAL_HEADER_VALUE 模版更新为 ${template.text()}")
     }
 
-    fun buildHeader(user:AuthUser) = mapOf(
+    fun buildHeader(aid: String, user:AuthUser) = mapOf(
         "from"                                      to config.name,
         settingS.value(S.SYS_TERMINAL_HEADER_NAME)  to template.apply(
             mapOf(
                 F.ID    to user.id,
                 F.NAME  to URLEncoder.encode(user.name, Charsets.UTF_8.name()),
                 F.IP    to user.ip,
-                F.TIME  to System.currentTimeMillis()
+                F.TIME  to System.currentTimeMillis(),
+                F.ROLE  to appRoleService.loadRoleOfUser(aid, user.id)
             )
         )
     )
 
+    fun checkAuth(aid: String, user:AuthUser, url:String) {
+        if(!appRoleService.checkAuth(aid, user.id, url)) throw Exception("${user.id} 未授权访问应用[$aid]的 $url")
+    }
 }
 
 @RestController
@@ -98,13 +105,16 @@ class ProxyCtrl(
         val path = request.servletPath.replace("/service/${aid}", "")
 
         val terminal = terminalS.load(aid) ?: throw Exception("应用[$aid]未开通后端服务")
+
+        val user = authHolder.get()
+        //判断是否具备访问权限
+        service.checkAuth(aid, user, path)
+
         val host = if(terminal.mode == Terminal.OUTSIDE) terminal.url else "${settingS.value(S.SYS_TERMINAL_HOST)}:${terminal.port}"
 
         val url = "${host}${path}${if(hasText(request.queryString)) "?${request.queryString}" else ""}"
 
         if(logger.isDebugEnabled)    logger.debug("转发请求（APP=$aid） 到 $url")
-
-        val user = authHolder.get()
 
         val log = TerminalLog(aid, host, path)
         log.method  = request.method
@@ -137,7 +147,7 @@ class ProxyCtrl(
                 logDetail.reqBody = String(requestBody, Charsets.UTF_8)
             }
 
-            route.redirect( request,requestBody, response, url, service.buildHeader(user) ).also { resEntity->
+            route.redirect( request, requestBody, response, url, service.buildHeader(aid, user) ).also { resEntity->
                 log.code = resEntity.statusCode.value()
 
                 //记录响应值

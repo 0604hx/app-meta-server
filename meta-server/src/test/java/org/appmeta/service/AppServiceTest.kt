@@ -2,16 +2,13 @@ package org.appmeta.service
 
 import jakarta.annotation.Resource
 import org.appmeta.AppTest
-import org.appmeta.domain.AppLink
-import org.appmeta.domain.AppMapper
-import org.appmeta.domain.Page
-import org.appmeta.domain.PageMapper
+import org.appmeta.domain.*
 import org.junit.jupiter.api.Test
 
 class AppServiceTest:AppTest() {
 
     @Resource
-    lateinit var appRoleS:AppRoleService
+    lateinit var appRoleM:AppRoleMapper
     @Resource
     lateinit var appLinkS:AppLinkService
     @Resource
@@ -21,8 +18,12 @@ class AppServiceTest:AppTest() {
 
     @Test
     fun checkRole(){
-        val isAdmin = appRoleS.isAdmin(AID, UID)
-        json(isAdmin)
+        appRoleM.selectList(null).also { roles->
+            println("共查询到${roles.size}个角色")
+            roles.forEach { r-> println(r) }
+        }
+
+        println(appRoleM.load(AID_DEMO, "admin"))
     }
 
     @Test

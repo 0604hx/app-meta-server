@@ -67,17 +67,29 @@ CREATE TABLE `app_version` (
   KEY `app_version_aid_IDX` (`aid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- `app-meta`.app_account definition
+-- `app-meta`.app_role definition
 
 CREATE TABLE `app_role` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `aid` varchar(15) NOT NULL,
-  `uid` varchar(15) NOT NULL,
-  `role` varchar(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `app_version_aid_IDX` (`aid`) USING BTREE,
-  KEY `app_version_uid_IDX` (`uid`) USING BTREE
+  `aid` varchar(30) NOT NULL,
+  `uuid` varchar(100) NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
+  `auth` text,
+  `summary` varchar(255) DEFAULT NULL,
+  `addOn` bigint DEFAULT NULL,
+  PRIMARY KEY (`aid`,`uuid`),
+  KEY `app_role_link_aid_IDX` (`aid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- `app-meta`.app_role_link definition
+
+CREATE TABLE `app_role_link` (
+  `aid` varchar(30) NOT NULL,
+  `uid` varchar(30) NOT NULL,
+  `role` varchar(255) DEFAULT NULL COMMENT '关联的角色ID，多个用英文逗号隔开',
+  PRIMARY KEY (`aid`,`uid`),
+  KEY `app_role_link_aid_IDX` (`aid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 -- `app-meta`.app_link definition
 

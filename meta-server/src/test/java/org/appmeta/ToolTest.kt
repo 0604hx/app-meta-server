@@ -8,6 +8,7 @@ import org.appmeta.tool.FileTool
 import org.appmeta.tool.GZIPTool
 import org.appmeta.tool.OSTool
 import org.junit.jupiter.api.Test
+import org.springframework.web.client.RestTemplate
 import java.io.File
 import java.nio.file.Paths
 import java.util.*
@@ -131,6 +132,13 @@ class ToolTest {
                     )
                 )
             )
+        }
+    }
+
+    @Test
+    fun restTemplate(){
+        Regex("[0-9a-zA-Z_.]+").also { r->
+            listOf("你哈", "abc-123", "as231_ssa", "admin.first", "ABC-").forEach { println("$it ：${r.matches(it)}") }
         }
     }
 }

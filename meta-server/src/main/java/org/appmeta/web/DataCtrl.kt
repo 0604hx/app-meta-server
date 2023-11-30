@@ -6,7 +6,6 @@ import org.appmeta.domain.DataBlock
 import org.appmeta.domain.DataMapper
 import org.appmeta.domain.WithApp
 import org.appmeta.model.*
-import org.appmeta.service.AppRoleService
 import org.appmeta.service.DataService
 import org.nerve.boot.module.operation.Operation
 import org.nerve.boot.util.DateUtil
@@ -20,7 +19,7 @@ import java.net.URLEncoder
 
 @RestController
 @RequestMapping("data")
-class DataCtrl(private val appRoleS: AppRoleService,private val service: DataService, private val mapper:DataMapper):CommonCtrl() {
+class DataCtrl(private val service: DataService, private val mapper:DataMapper):CommonCtrl() {
 
     private fun _detectRole(model: DataModel) {
 //        val user = authHolder.get()

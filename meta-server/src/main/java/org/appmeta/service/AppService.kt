@@ -1,20 +1,27 @@
 package org.appmeta.service
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper
 import org.apache.commons.io.FileUtils
 import org.appmeta.*
 import org.appmeta.component.AppConfig
 import org.appmeta.domain.*
 import org.appmeta.model.AppModel
 import org.appmeta.tool.FileTool
+import org.nerve.boot.Const.AT
 import org.nerve.boot.Const.EMPTY
+import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.db.service.BaseService
 import org.nerve.boot.exception.ServiceException
 import org.nerve.boot.module.setting.SettingService
 import org.nerve.boot.util.DateUtil
 import org.nerve.boot.util.MD5Util
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.util.AntPathMatcher
+import org.springframework.util.Assert
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StreamUtils
 import org.springframework.util.StringUtils
@@ -24,6 +31,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
+import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
 
@@ -35,13 +43,6 @@ import java.util.zip.ZipFile
  * 0604hx   https://github.com/0604hx
  * --------------------------------------------------------------
  */
-
-@Service
-class AppRoleService:BaseService<AppRoleMapper, AppRole>(){
-
-    @Cacheable(Caches.APP_ACCOUNT)
-    fun isAdmin(aid:String, uid:String) = count(Q().eq(F.AID, aid).eq(F.UID, uid).eq(F.ROLE, Role.ADMIN)) > 0L
-}
 
 @Service
 class AppLinkService(
@@ -191,10 +192,10 @@ class AppVersionService(private val config:AppConfig, private val settingService
     /**
      *
      */
-    fun unzipToDeploy(id:String, originFile:File): String {
+    fun unzipToDeploy(id:String, originFile:File, linkStr:String="<br>"): String {
         val targetPath = with(id) {
             var dir = config.resPath
-            if(StringUtils.hasText(id))
+            if (StringUtils.hasText(id))
                 dir = "./${config.resAppPath}/${id}"
 
             logger.info("资源解压到 {}", dir)
@@ -202,40 +203,123 @@ class AppVersionService(private val config:AppConfig, private val settingService
         }
 
         FileSystemUtils.deleteRecursively(targetPath)
-        return FileTool.unzip(originFile, targetPath).joinToString("<br>")
-
-//        ZipInputStream(FileInputStream(originFile)).use { zipIs->
-//            FileSystemUtils.deleteRecursively(targetPath)
-//
-//            val joiner = StringJoiner("<br>")
-//            val targetFolder = targetPath.toFile()
-//
-//            var entry: ZipEntry? = zipIs.nextEntry
-//            while(entry!=null){
-//                val file = File(targetFolder, entry.name)
-//                if(!file.parentFile.exists())   file.parentFile.mkdirs()
-//
-//                val msg = "inflating:\t$file"
-//                if(logger.isDebugEnabled)   logger.debug(msg)
-//                joiner.add(msg)
-//
-//                if(entry.isDirectory)
-//                    file.mkdir()
-//                else{
-//                    val fileOut = FileOutputStream(file)
-//                    fileOut.write(zipIs.readBytes())
-//                    fileOut.close()
-//                }
-//
-//                zipIs.closeEntry()
-//                entry = zipIs.nextEntry
-//            }
-//
-//            return joiner
-//        }
+        return FileTool.unzip(originFile, targetPath).joinToString(linkStr)
     }
 }
 
+/**
+ * 应用权限管理模块
+ */
+@Service
+class AppRoleService(private val roleM:AppRoleMapper, private val linkM:AppRoleLinkMapper) {
+    val logger = LoggerFactory.getLogger(javaClass)
+
+    private val UUID_REGEX = Regex("[0-9a-zA-Z_.]+")
+    private fun RQ(aid: String, uuid: String?=null) = QueryWrapper<AppRole>().eq(F.AID, aid).eq(uuid!=null, F.UUID, uuid)
+    private fun LQ(aid: String, uid:String) = QueryWrapper<AppRoleLink>().eq(F.AID, aid).eq(F.UID, uid)
+
+    private fun roleCacheKey(aid: String, uid: String) = "APP-ROLE-$aid-$uid"
+
+    /**
+     * 清空相应的缓存
+     */
+    fun cleanCache(aid: String, uid: String?=null) =
+        CacheManage.clearWithPrefix("${aid}$AT${if(uid != null) "${uid}${AT}" else ""}")
+
+    fun roleList(aid: String) = roleM.selectList(RQ(aid))
+
+    fun addRole(role:AppRole) {
+        Assert.hasText(role.aid, "应用ID不能为空")
+        Assert.hasText(role.uuid, "角色ID不能为空")
+
+        //角色ID只能：0-9,a-z,A-Z,_,. 等组合
+        Assert.isTrue(UUID_REGEX.matches(role.uuid), "角色ID只能包含数字、字母、下划线、英文点")
+
+        //判断是否存在重复
+        Assert.isTrue(roleM.selectCount(RQ(role.aid, role.uuid)) <= 0L, "应用（${role.aid}）下已存在角色${role.uuid}")
+
+        roleM.insert(role)
+        logger.info("新增应用（${role.aid}）角色：${role.uuid}/${role.name}-${role.summary}")
+
+        cleanCache(role.aid)
+    }
+
+    fun removeRole(aid:String, uuid:String):Int =
+        roleM.delete(RQ(aid, uuid)).also {
+            if(it>0)    cleanCache(aid)
+            logger.info("删除应用（${aid}）角色：${uuid}（结果=${it}）")
+        }
+
+    /**
+     * 仅能更新授权信息、名称、描述信息
+     * 返回更新数量
+     */
+    fun updateRole(role: AppRole) =
+        UpdateWrapper<AppRole>().eq(F.AID, role.aid).eq(F.UUID, role.uuid).let { q->
+            q.set(StringUtils.hasText(role.name), F.NAME, role.name)
+            q.set(StringUtils.hasText(role.auth), F.AUTH, role.auth)
+            q.set(StringUtils.hasText(role.summary), F.SUMMARY, role.summary)
+
+            roleM.update(q).also {
+                if(it>0)    cleanCache(role.aid, role.uuid)
+            }
+        }
+
+    /**
+     * 查询某个用户的应用权限
+     */
+    fun loadLink(aid: String, uid: String) = linkM.load(aid, uid)
+
+    fun updateLink(link: AppRoleLink) {
+        Assert.hasText(link.aid, "应用ID不能为空")
+        Assert.hasText(link.uid, "用户ID不能为空")
+
+        val old = linkM.load(link.aid, link.uid)
+        if(old != null){
+            if(old.role == link.role) return
+
+            linkM.update(UpdateWrapper<AppRoleLink>().eq(F.AID, link.aid).eq(F.UID, link.uid).set(F.ROLE, link.role))
+        }
+        else{
+            linkM.insert(link)
+        }
+        logger.info("分配${link.uid}在应用${link.aid}下的角色：${link.role}")
+
+        cleanCache(link.aid, link.uid)
+        CacheManage.clear(roleCacheKey(link.aid, link.uid))
+    }
+
+    /**
+     * 判断是否存在指定路径的访问权限
+     */
+    fun checkAuth(aid: String, uid: String, url:String):Boolean = CacheManage.get(
+        "${aid}${AT}${uid}${AT}${url}",
+        {
+            val roles = roleM.selectList(RQ(aid))
+            if(roles.isEmpty()) return@get true
+
+            val links = linkM.load(aid, uid)?: return@get false
+            val urls = mutableSetOf<String>()
+            links.roleList().also { userRoles->
+                roles.forEach { r->
+                    if(userRoles.contains(r.uuid))  urls.addAll(r.authList())
+                }
+            }
+            if(logger.isDebugEnabled)   logger.debug("$uid 在应用${aid}内的授权：${urls}")
+            AntPathMatcher().let { m-> urls.any { m.match(it, url) } }
+        },
+        3600*10
+    )
+
+    /**
+     * 获取用户的角色列表
+     * 返回的是字符串
+     */
+    fun loadRoleOfUser(aid: String, uid: String) = CacheManage.get(roleCacheKey(aid, uid)) {
+        val link = linkM.load(aid, uid) ?: return@get EMPTY
+        link.role
+    }
+}
 
 @Service
 class AppService(
@@ -243,12 +327,12 @@ class AppService(
     private val cfg: AppConfig,
     private val propertyM:AppPropertyMapper) : BaseService<AppMapper, App>() {
 
-    fun detailOf(id:String): Map<String, Any> {
-        val app = getById(id)?: throw ServiceException("应用#${id}不存在")
+    fun detailOf(id: String): Map<String, Any> {
+        val app = getById(id) ?: throw ServiceException("应用#${id}不存在")
 
         return mapOf(
-            "app"       to app,
-            "property"  to propertyM.selectById(id)
+            "app" to app,
+            "property" to propertyM.selectById(id)
         )
     }
 
@@ -256,11 +340,11 @@ class AppService(
     fun create(model: AppModel) {
         val (app, property) = model
 
-        if(!Regex(cfg.appIdRegex).matches(app.id))
+        if (!Regex(cfg.appIdRegex).matches(app.id))
             throw Exception("应用编号[${app.id}]不合规，必须是长度在3-20间的字母数字下划线组合")
-        if(count(Q().eq(F.ID, app.id)) > 0)     throw ServiceException("应用编号[${app.id}]已存在")
+        if (count(Q().eq(F.ID, app.id)) > 0) throw ServiceException("应用编号[${app.id}]已存在")
 
-        app.addOn   = System.currentTimeMillis()
+        app.addOn = System.currentTimeMillis()
         save(app)
 
         property.bind(app)
@@ -275,7 +359,7 @@ class AppService(
     fun update(model: AppModel) {
         val (app, property) = model
 
-        if(!baseMapper.exists(Q().eq(F.ID, app.id)))
+        if (!baseMapper.exists(Q().eq(F.ID, app.id)))
             throw Exception("应用编号[${app.id}]不存在")
 
         updateById(app)

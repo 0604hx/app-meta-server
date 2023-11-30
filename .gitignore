@@ -31,3 +31,6 @@ version-*.txt
 
 .ADMIN
 shorturl.txt
+
+dependency-reduced-pom.xml
+launch.properties

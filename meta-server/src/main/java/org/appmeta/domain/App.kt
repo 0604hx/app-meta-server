@@ -1,5 +1,8 @@
 package org.appmeta.domain
 
+import com.baomidou.mybatisplus.annotation.IdType
+import com.baomidou.mybatisplus.annotation.TableField
+import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
 import com.baomidou.mybatisplus.core.mapper.BaseMapper
 import jakarta.validation.constraints.NotBlank
@@ -8,6 +11,7 @@ import org.apache.ibatis.annotations.Param
 import org.apache.ibatis.annotations.Select
 import org.appmeta.Caches
 import org.appmeta.Role
+import org.nerve.boot.Const.COMMA
 import org.nerve.boot.annotation.CN
 import org.nerve.boot.db.StringEntity
 import org.springframework.cache.annotation.Cacheable
@@ -84,10 +88,27 @@ class AppVersion : AppWithUser {
 	}
 }
 
-@CN("应用角色映射")
+@CN("应用角色")
 @TableName("app_role")
-class AppRole : AppWithUser() {
-	var role 	= Role.NORMAL
+class AppRole {
+	var aid		= ""
+	var uuid 	= ""
+	var name 	= ""
+	var auth 	= ""
+	var summary = ""
+	var addOn 	= 0L
+
+	fun authList() = auth.split(COMMA).map { it.trim() }
+}
+
+@CN("应用角色关联")
+@TableName("app_role_link")
+class AppRoleLink {
+	var aid 	= ""
+	var uid 	= ""
+	var role 	= ""
+
+	fun roleList() = role.split(COMMA).map { it.trim() }
 }
 
 
@@ -133,7 +154,7 @@ interface AppMapper:BaseMapper<App> {
 
 	@Cacheable(Caches.APP)
 	@Select("SELECT * FROM app WHERE id=#{0}")
-	fun withCache(id: String):App?
+	fun withCache(id: Serializable):App?
 }
 
 @Mapper
@@ -145,8 +166,20 @@ interface AppVersionMapper:BaseMapper<AppVersion> {
 @Mapper
 interface AppPropertyMapper:BaseMapper<AppProperty>
 
+/**
+ * 由于采用了复合主键，xxxById 接口将无法正常使用
+ */
 @Mapper
-interface AppRoleMapper:BaseMapper<AppRole>
+interface AppRoleMapper:BaseMapper<AppRole> {
+	@Select("SELECT * FROM app_role WHERE aid=#{aid} AND uuid=#{uuid} LIMIT 1")
+	fun load(@Param("aid") aid:String, @Param("uuid") uuid:String):AppRole?
+}
+
+@Mapper
+interface AppRoleLinkMapper:BaseMapper<AppRoleLink> {
+	@Select("SELECT * FROM app_role_link WHERE aid=#{aid} AND uid=#{uid} LIMIT 1")
+	fun load(@Param("aid") aid:String, @Param("uid") uid:String):AppRoleLink?
+}
 
 @Mapper
 interface AppLinkMapper:BaseMapper<AppLink>

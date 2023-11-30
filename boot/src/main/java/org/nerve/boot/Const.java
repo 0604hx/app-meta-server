@@ -8,6 +8,7 @@ public final class Const {
     public static final String STICK = "|";
     public static final String EMPTY = "";
     public static final String SPACE = " ";             //空格
+    public static final String AT    = "@";
     public static final String FENHAO= ";";
     public static final String TAB   = "\t";
     public static final String NEW_LINE = System.getProperty("line.separator", "\r\n");

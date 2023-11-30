@@ -8,10 +8,7 @@ import org.appmeta.H
 import org.appmeta.Role
 import org.appmeta.domain.*
 import org.appmeta.model.*
-import org.appmeta.service.AppAsync
-import org.appmeta.service.AppService
-import org.appmeta.service.CacheRefresh
-import org.appmeta.service.DashboardService
+import org.appmeta.service.*
 import org.appmeta.web.CommonCtrl
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.Result
@@ -20,10 +17,7 @@ import org.nerve.boot.exception.ServiceException
 import org.nerve.boot.module.operation.Operation
 import org.springframework.http.HttpStatus
 import org.springframework.util.StringUtils
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.io.Serializable
 
 
@@ -44,10 +38,11 @@ class AppCtrl(
     private val pageM:PageMapper,
     private val dataM:DataMapper,
     private val dashboardS: DashboardService,
+    private val roleS: AppRoleService,
     private val mapper: AppMapper, private val service: AppService) : CommonCtrl() {
 
     protected fun _checkEditAuth(id: Serializable, worker:(App, AuthUser)->Any?): Result {
-        val app = mapper.selectById(id)
+        val app = mapper.withCache(id)?: throw Exception("应用[${id}]不存在")
         val user = authHolder.get()
         if(app.uid == user.id || H.hasAnyRole(user, Role.ADMIN, Role.APP_MANAGER))
             return resultWithData { worker(app, user) }
@@ -119,7 +114,7 @@ class AppCtrl(
     @RequestMapping("update", name = "更新应用信息")
     fun update(@Valid @RequestBody model: AppModel) = _checkEditAuth(model.app.id) { _, user->
         val app = model.app
-        if(StringUtils.hasText(app.uid))
+        if(!StringUtils.hasText(app.uid))
             app.of(user)
 
         service.update(model)
@@ -165,4 +160,45 @@ class AppCtrl(
         else
             throw Exception("仅限创建者或管理员能够删除应用")
     }
+
+    /*
+     * ============================ 角色/权限 ============================
+     * 针对后端服务
+     */
+    @PostMapping("role/mine/{aid}", name = "获取当前用户的应用角色")
+    fun roleMine(@PathVariable aid:String) = resultWithData { roleS.loadRoleOfUser(aid, authHolder.get().id) }
+
+    @PostMapping("role/list", name = "查看应用下角色清单")
+    fun roleList(@RequestBody model: AppRoleLink) = _checkEditAuth(model.aid) { _, _ ->
+        if(StringUtils.hasText(model.uid))
+            roleS.loadLink(model.aid, model.uid)
+        else
+            roleS.roleList(model.aid)
+    }
+
+    @PostMapping("role/add", name = "新增应用角色")
+    fun addRole(@RequestBody role: AppRole) = _checkEditAuth(role.aid) { app,_ ->
+        roleS.addRole(role)
+        opLog("新增应用角色${role.uuid}(${role.name})", app, Operation.CREATE)
+    }
+
+    @PostMapping("role/delete", name = "删除应用角色")
+    fun removeRole(@RequestBody role: AppRole) = _checkEditAuth(role.aid) { app,_ ->
+        roleS.removeRole(role.aid, role.uuid).also { opLog("删除应用角色${role.uuid}（结果=${it}）", app, Operation.DELETE) }
+    }
+
+    @PostMapping("role/update", name = "更新应用角色")
+    fun updateRole(@RequestBody role: AppRole) = _checkEditAuth(role.aid) { _,_ -> roleS.updateRole(role) }
+
+    @PostMapping("role/check", name = "检测用户对指定URL的访问权限")
+    fun checkRoleAuth(@RequestBody link:AppRoleLink) = resultWithData { roleS.checkAuth(link.aid, link.uid, link.role) }
+
+    @PostMapping("role/link", name = "分配应用角色到用户")
+    fun roleLink(@RequestBody link:AppRoleLink) = _checkEditAuth(link.aid) { app,_ ->
+        roleS.updateLink(link)
+        opLog("分配应用角色[${link.role}]到用户${link.uid}", app, Operation.MODIFY)
+    }
+
+    @PostMapping("role/clean-cache", name = "删除指定应用的授权缓存")
+    fun roleCacheClean(@RequestBody model:AppRole) = result { roleS.cleanCache(model.aid) }
 }

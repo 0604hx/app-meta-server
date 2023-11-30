@@ -47,7 +47,7 @@ class IndexCtrl(
     @RequestMapping("time", name = "服务器时间")
     fun time() = resultWithData {
         val started = DateUtil.formatDate(Date(ManagementFactory.getRuntimeMXBean().startTime), DateUtil.DATE_TIME)
-        "${DateUtil.getDateTime()} (RUN ON $started)"
+        "${DateUtil.getDateTime()} (RUNED ON $started)"
     }
 
     // authHolder 未被注入，故直接通过 JWT token 获取用户信息
