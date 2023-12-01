@@ -29,7 +29,9 @@ public class WatchWorker implements Runnable {
     private List<String> filenames;
     private WatchService watcher;
     private WatchHandler handler;
-    private int delay = 10;              //指定秒内仅触发一次
+
+    private int duration    = 5;    //指定秒内仅触发一次
+    private int delay       = 8;    //事件延迟发布
 
     private Map<String, Long> timeMap = new HashMap<>();
 
@@ -55,14 +57,16 @@ public class WatchWorker implements Runnable {
             for (WatchEvent<?> event : key.pollEvents()) {
                 if (event.kind() == StandardWatchEventKinds.OVERFLOW)   continue;
 
-                if(logger.isDebugEnabled()) logger.debug("监听到变化, KIND={} COUNT={}", event.kind(), event.count());
-
                 Path target = (Path) event.context();
                 if(filenames.contains(target.toString())){
                     //判断是否重复
                     long last = timeMap.getOrDefault(target.toString(), 0L);
-                    if(System.currentTimeMillis() - last > delay * 1000L){
+                    if(System.currentTimeMillis() - last > duration * 1000L){
                         if(logger.isDebugEnabled()) logger.debug("监听到文件 {} 变动", target);
+
+                        //等待指定时间后发布事件
+                        if(delay > 0)   Thread.sleep(delay * 1000L);
+
                         if(handler != null) handler.onChange(target);
                     }
                     timeMap.put(target.toString(), System.currentTimeMillis());
@@ -73,5 +77,23 @@ public class WatchWorker implements Runnable {
         } catch (Exception e) {
             logger.error("监听作业出错", e);
         }
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public WatchWorker setDuration(int duration) {
+        this.duration = duration;
+        return this;
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+
+    public WatchWorker setDelay(int delay) {
+        this.delay = delay;
+        return this;
     }
 }

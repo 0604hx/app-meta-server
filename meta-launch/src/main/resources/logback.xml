@@ -27,13 +27,13 @@
         </rollingPolicy>
 
         <encoder>
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss} %5p : %m%n</Pattern>
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss} |%8thread| %5p : %m%n</Pattern>
         </encoder>
     </appender>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} |%8thread| %5p : %m%n</Pattern>
+            <Pattern>%d{MM-dd HH:mm:ss.SSS} |%8thread| %5p : %m%n</Pattern>
         </encoder>
     </appender>
 

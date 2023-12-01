@@ -20,7 +20,7 @@ import java.util.Properties;
 public final class C {
     private static final Logger logger = LoggerFactory.getLogger(C.class);
 
-    public static int delay         = 10;
+    public static int delay         = 8;
     public static String dir        = "";
     public static String watch      = "meta-server-1.0.jar";
     public static String cmd        = "java -jar meta-server-1.0.jar --spring.profiles.active=prod";
