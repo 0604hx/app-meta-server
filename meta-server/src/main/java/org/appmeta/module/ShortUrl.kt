@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.ibatis.annotations.Mapper
 import org.appmeta.F
+import org.appmeta.S
 import org.appmeta.model.TextModel
 import org.nerve.boot.Const
 import org.nerve.boot.annotation.CN
 import org.nerve.boot.db.StringEntity
+import org.nerve.boot.module.setting.SettingService
 import org.nerve.boot.util.MD5Util
 import org.nerve.boot.web.ctrl.BasicController
 import org.springframework.beans.factory.annotation.Value
@@ -109,7 +111,7 @@ class ShortUrlFileProvider:ShortUrlProvier {
 @Order(Int.MAX_VALUE)
 @RestController
 @RequestMapping("s")
-class ShortUrlCtrl(private val provier: ShortUrlProvier):BasicController() {
+class ShortUrlCtrl(private val settingS:SettingService,private val provier: ShortUrlProvier):BasicController() {
     @Value("\${server.servlet.context-path}")
     private val contextPath = ""
 
@@ -129,7 +131,7 @@ class ShortUrlCtrl(private val provier: ShortUrlProvier):BasicController() {
     fun shortUrl(@PathVariable uuid:String, response: HttpServletResponse) {
         val url = provier.get(uuid)?: throw Exception("短链接不存在")
 
-        logger.info("短链接跳转 $uuid >> ${url}")
-        response.sendRedirect("${contextPath}${url}")
+        logger.info("短链接跳转 $uuid >> $url")
+        response.sendRedirect("${settingS.value(S.SYS_HOST)}${contextPath}${url}")
     }
 }

@@ -45,6 +45,7 @@ nerve:
     innerUrls:
       - /query
       - /whoami
+      - /api/**
       - /app/**
       - /attachment/**
       - /data/**

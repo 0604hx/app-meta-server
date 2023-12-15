@@ -29,11 +29,12 @@ class AppConfig {
     var resAppPath      = "www-app"
     var resHistoryPath  = "www-history"     //前端资源历史版本目录
     var resAppContext   = "www"
+
     var resZipFile      = "static.zip"      //前端资源打包后的文件名称
     var resZipCheck     = true              //解压前端资源是否进行校验
     var resZipKeep      = false             //前端资源是否在解压后保留源文件
     var resZipLimit     = 20                //最多保留版本包数量
-
+    var resCacheTime    = -1L                //前端资源缓存时间，单位分钟
     var appIdRegex      = "^[A-Za-z0-9_]{3,20}\$"
     var appLaunchWindow = 20                //应用运行次数统计的时间窗口，单位分钟，即在该时间内不会重复计算
 

@@ -125,6 +125,8 @@ enum class S {
     DBM_LIMIT,
     DBM_BATCH,
 
+    SYS_HOST,
+
     SYS_NOTICE_LINE,
     SYS_ACCOUNT_INTERVAL,
     SYS_ACCOUNT_REMOTE,

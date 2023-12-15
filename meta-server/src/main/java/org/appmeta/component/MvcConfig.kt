@@ -3,9 +3,11 @@ package org.appmeta.component
 import org.appmeta.URL_ALL
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.CacheControl
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import java.util.concurrent.TimeUnit
 
 
 /*
@@ -31,8 +33,16 @@ class MvcConfig(private val config: AppConfig) : WebMvcConfigurer {
                 xxxx/               小程序（目录名为 ID）
                     index.html      小程序入口文件（默认为 index.html），访问路径 {应用context}/www/xxxx/index.html
          */
-        registry.addResourceHandler(URL_ALL).addResourceLocations("${config.resProtocol}:${config.resPath}/")
-        registry.addResourceHandler("/${config.resAppContext}/**").addResourceLocations("${config.resProtocol}:${config.resAppPath}/")
+        val mainHandler = registry.addResourceHandler(URL_ALL).addResourceLocations("${config.resProtocol}:${config.resPath}/")
+        val h5Handler   = registry.addResourceHandler("/${config.resAppContext}/**").addResourceLocations("${config.resProtocol}:${config.resAppPath}/")
+
+        if(config.resCacheTime >= 0L){
+            logger.info("[应有资源] 配置协商缓存，有效期=${config.resCacheTime}分钟")
+            CacheControl.maxAge(config.resCacheTime, TimeUnit.MINUTES).also {
+                mainHandler.setCacheControl(it)
+                h5Handler.setCacheControl(it)
+            }
+        }
 
         logger.info("[应用资源] 资源协议=${config.resProtocol} 前端资源目录=${config.resPath} 应用部署目录=${config.resAppPath} 应用访问CONTEXT=${config.resAppContext}")
     }
