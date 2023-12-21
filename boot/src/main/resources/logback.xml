@@ -65,7 +65,7 @@
         </root>
     </springProfile>
 
-    <!--开发环境下值显示到控制台-->
+    <!--开发环境下仅显示到控制台-->
     <springProfile name="dev,test">
         <logger name="com.nerve" level="DEBUG"/>
         <logger name="org.springframework.data.mongodb.core.MongoTemplate" level="DEBUG"/>

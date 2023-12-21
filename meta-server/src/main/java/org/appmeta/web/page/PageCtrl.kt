@@ -313,15 +313,20 @@ class PageCtrl(
 
     @PostMapping("document-upload", name = "上传页面附件")
     fun documentUpload(@RequestParam("file") file: MultipartFile, model:PageModel)  = _checkEditResult(model.pid) { page, user->
-        val document = documentS.store(file.inputStream, file.originalFilename!!) { doc->
-            doc.of(user)
-            doc.aid = page.aid
-            doc.pid = "${page.id}"
-        }
+        val isOver = model.id != null
+
+        val document = if(isOver)
+            documentS.overwrite(model, file.inputStream, file.originalFilename!!)
+        else
+            documentS.store(file.inputStream, file.originalFilename!!) { doc->
+                doc.of(user)
+                doc.aid = page.aid
+                doc.pid = "${page.id}"
+            }
 
         cacheRefresh.pageDocumentList(model.pid)
 
-        opLog("上传附件 ${model.toText()} >> ${document.path}", document, Operation.IMPORT)
+        opLog("${if(isOver) "覆盖" else "上传"}附件 ${model.toText()} >> ${document.path}", document, Operation.IMPORT)
         document
     }
 

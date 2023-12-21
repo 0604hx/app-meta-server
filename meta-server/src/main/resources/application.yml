@@ -16,8 +16,11 @@ spring:
     password: rootroot
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jackson:
-    # 序列化时忽略 null 的属性
+  threads:
+    virtual:
+      enabled: true
+#  jackson:
+#     #序列化时忽略 null 的属性
 #    default-property-inclusion: non_null
 
 nerve:
