@@ -16,7 +16,7 @@ import org.nerve.boot.util.DateUtil
  * --------------------------------------------------------------
  */
 
-class ApiServiceTest : AppTest() {
+class FuncServiceTest : AppTest() {
 
     @Resource
     lateinit var service: ApiService

@@ -29,7 +29,7 @@ open class BasicPageCtrl : CommonCtrl() {
     @Resource
     lateinit var pageM:PageMapper
 
-    private fun _loadPage(id:Serializable) = pageM.selectById(id)?: throw Exception("页面/功能 #$id 不存在")
+    protected fun _loadPage(id:Serializable) = pageM.selectById(id)?: throw Exception("页面/功能 #$id 不存在")
 
     /**
      * 判断是否具备指定页面的访问权限

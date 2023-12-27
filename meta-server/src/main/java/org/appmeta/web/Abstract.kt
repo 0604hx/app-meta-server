@@ -2,6 +2,9 @@ package org.appmeta.web
 
 import jakarta.annotation.Resource
 import org.appmeta.component.AppConfig
+import org.appmeta.service.AccountHelper
+import org.nerve.boot.web.auth.AuthConfig
+import org.nerve.boot.web.auth.UserLoader
 import org.nerve.boot.web.ctrl.BasicController
 
 
@@ -23,4 +26,19 @@ abstract class CommonCtrl : BasicController() {
      * 获取渠道信息
      */
     protected fun getChannel() = getHeader(appConfig.headerChannel)
+}
+
+/**
+ * 允许匿名访问的 Controller 基类
+ */
+abstract class AnonymousAbleCtrl:BasicController() {
+    @Resource
+    lateinit var userLoader: UserLoader
+    @Resource
+    lateinit var authConfig: AuthConfig
+
+    /**
+     *
+     */
+    protected fun getUserOrNull() = userLoader.from(request.getHeader(authConfig.tokenName))
 }

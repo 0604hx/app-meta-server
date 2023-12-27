@@ -45,6 +45,7 @@ nerve:
       - /login_with_cas
       - /login_with_cas_bck
       - /outreach/**
+      - /faas/**
     innerUrls:
       - /query
       - /whoami

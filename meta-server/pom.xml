@@ -20,6 +20,7 @@
         <tika.version>2.5.0</tika.version>
         <slf4j.version>2.0.9</slf4j.version>
         <easyexcel.version>3.3.2</easyexcel.version>
+        <graalvm.version>23.1.1</graalvm.version>
     </properties>
 
     <dependencies>
@@ -72,6 +73,19 @@
             <version>0.4.20</version>
         </dependency>
 
+        <!-- 增加 GraalJS 依赖 -->
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>${graalvm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>js-community</artifactId>
+            <version>${graalvm.version}</version>
+            <type>pom</type>
+        </dependency>
+
 <!--        <dependency>-->
 <!--            <groupId>org.jetbrains.kotlin</groupId>-->
 <!--            <artifactId>kotlin-stdlib-jdk8</artifactId>-->
@@ -87,13 +101,11 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
 

@@ -8,6 +8,7 @@ import org.appmeta.component.AppConfig
 import org.appmeta.domain.*
 import org.appmeta.model.AppModel
 import org.appmeta.tool.FileTool
+import org.nerve.boot.Const
 import org.nerve.boot.Const.AT
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.cache.CacheManage
@@ -312,13 +313,39 @@ class AppRoleService(private val roleM:AppRoleMapper, private val linkM:AppRoleL
     )
 
     /**
+     * 返回用户在指定应用下的：
+     *  1、角色列表（List）
+     *  2、授权URL
+     *  3、角色列表（String格式，以英文逗号隔开）
+     */
+    fun loadRoleAndAuthOfUser(aid: String, uid: String): Triple<List<String>, List<String>, String> = CacheManage.get(roleCacheKey(aid, uid)) {
+        val roles = roleM.selectList(RQ(aid))
+        if(roles.isEmpty())
+            Triple(emptyList(), emptyList(), EMPTY)
+        else{
+            //计算授权的地址
+            val link = linkM.load(aid, uid)
+            Triple(
+                roles.map { it.uuid },
+                if(link == null)
+                    emptyList()
+                else
+                    link.roleList().let { userRoles->
+                        val auths = mutableListOf<String>()
+                        roles.filter { userRoles.contains(it.uuid) }.forEach { auths.addAll(it.authList()) }
+                        auths
+                    }
+                ,
+                link?.role ?: EMPTY
+            )
+        }
+    }
+
+    /**
      * 获取用户的角色列表
      * 返回的是字符串
      */
-    fun loadRoleOfUser(aid: String, uid: String) = CacheManage.get(roleCacheKey(aid, uid)) {
-        val link = linkM.load(aid, uid) ?: return@get EMPTY
-        link.role
-    }
+    fun loadRoleOfUser(aid: String, uid: String) = loadRoleAndAuthOfUser(aid, uid).third
 }
 
 @Service

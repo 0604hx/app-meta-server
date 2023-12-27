@@ -68,7 +68,7 @@ public class ScriptTest {
                     print("Graal.versionGraalVM", "\t\t=",Graal.versionGraalVM);
                     print("Graal.isGraalRuntime", "\t\t=",Graal.isGraalRuntime());
                 }
-                console.log(name, JSON.stringify(phone))
+                console.log(name, JSON.stringify(phone), phone.number)
                 phone.call('hello')
                 let { mime, date } = phone.mime()
                 console.log(`从 JAVA 中获取的 MIME=`, mime);

@@ -59,6 +59,9 @@ class DataBlock : WithApp {
         this.aid    = aid
         this.uuid   = uuid
     }
+    constructor(aid: String, uuid: String, text:String):this(aid, uuid) {
+        this.text   = text
+    }
 
     fun info() = "AID=$aid UUID=$uuid"
 }
