@@ -14,7 +14,6 @@ import org.nerve.boot.Pagination
 import org.nerve.boot.db.service.QueryHelper
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils.hasText
 import java.util.*
@@ -59,20 +58,6 @@ class TerminalService(
         )
 
         return JSON.parseObject(page.content, Terminal::class.java)?.also {  it.pid = "${page.id}" }
-    }
-
-    @Async
-    fun addLog(log: TerminalLog, detail: TerminalLogDetail?) {
-        if(log.addOn > 0L)
-            log.used = System.currentTimeMillis() - log.addOn
-
-        logM.insert(log)
-        if(logger.isDebugEnabled)   logger.debug("[SERVICE-ROUTE] 转发请求到 ${log.url} (${log.used} ms) 保存详情=${detail != null}")
-
-        if(detail != null){
-            detail.id = log.id
-            detailM.insert(detail)
-        }
     }
 
     fun logList(params:Map<String, Any>, pagination: Pagination, aid:String=EMPTY): List<TerminalLog> {

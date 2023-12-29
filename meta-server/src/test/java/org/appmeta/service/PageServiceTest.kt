@@ -80,9 +80,9 @@ class PageServiceTest:AppTest() {
                         const ID = "counter"
                         let count = meta.getSession(ID) || 0
                         meta.setSession(ID, count++)
-                        console.debug(`[会话值] COUNTER=：`, count)
+                        console.debug(`[会话值] COUNTER=`, count)
                         
-                        Date.now()
+                        [{ time: Date.now(), user: user.id, data: count }]
                     """.trimIndent()
                     f.mode = Func.JS
                     f.params = listOf(FuncParmeter(F.AID, "应用ID", true))

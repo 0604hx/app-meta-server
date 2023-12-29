@@ -31,7 +31,7 @@ abstract class CommonCtrl : BasicController() {
 /**
  * 允许匿名访问的 Controller 基类
  */
-abstract class AnonymousAbleCtrl:BasicController() {
+abstract class AnonymousAbleCtrl:CommonCtrl() {
     @Resource
     lateinit var userLoader: UserLoader
     @Resource

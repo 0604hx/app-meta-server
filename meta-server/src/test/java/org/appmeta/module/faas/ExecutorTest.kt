@@ -75,4 +75,30 @@ class ExecutorTest:AppTest() {
             )
         )
     }
+
+    @Test
+    fun jsForError(){
+        val code = """
+            console.log(`调用JS脚本，参数`, params, "用户ID", user.id)
+
+            const ID = "counter"
+            let count = meta.getSession(ID) || 0
+            meta.setSession(ID, ++count)
+            console.debug(`[会话值] COUNTER=`, count)
+
+            //如果出现 TypeError: Cannot convert undefined or null to object: undefined 的错误
+            //很可能是上一行代码没有加分号 =.=
+            [{ time: Date.now(), user: user.id, data: count }]
+        """.trimIndent()
+        println(
+            jsExecutor.run(
+                buildFunc(code, Func.JS),
+                FuncContext(
+                    AID_DEMO,
+                    mutableMapOf(),
+                    UserContext(UID, UNAME)
+                )
+            )
+        )
+    }
 }

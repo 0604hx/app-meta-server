@@ -35,7 +35,7 @@ class AppAsync(
     private val launchM:PageLaunchMapper,
     private val pageM:PageMapper) {
 
-    val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val launchMap = LimitMap<Long>(500)
 
@@ -97,7 +97,7 @@ class AppAsync(
  */
 @Service
 class SystemAsync(private val accountS:AccountService,private val settingS:SettingService) {
-    val logger = LoggerFactory.getLogger(javaClass)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private fun _log(msg:String) = logger.info("[系统异步作业] $msg")
 
@@ -112,5 +112,24 @@ class SystemAsync(private val accountS:AccountService,private val settingS:Setti
                 }
             }
         }
+    }
+}
+
+@Service
+class LogAsync(private val logM:TerminalLogMapper, private val logDetailM:TerminalLogDetailMapper) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    @Async
+    fun save(log: TerminalLog, detail: TerminalLogDetail?=null){
+        if(log.addOn <= 0L) log.addOn = System.currentTimeMillis()
+        else {
+            if(log.used <= 0L)  log.used = System.currentTimeMillis() - log.addOn
+        }
+
+        if(logger.isDebugEnabled)   logger.debug("记录后端/FaaS日志 ${log.url} (${log.used} ms) 保存详情=${detail != null}")
+
+        logM.insert(log)
+        if(detail != null)
+            logDetailM.insert(detail)
     }
 }

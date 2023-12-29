@@ -1,5 +1,6 @@
 package org.appmeta.module.faas
 
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.appmeta.F
 import org.appmeta.domain.Account
 import org.appmeta.domain.Department
@@ -7,6 +8,7 @@ import org.appmeta.domain.NameBean
 import org.nerve.boot.domain.AuthUser
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 
 
 /*
@@ -53,12 +55,33 @@ class Func {
     var mode                        = SQL
     var summary                     = ""
     var params:List<FuncParmeter>   = listOf()          //入参配置
+    var paramsLimit                 = false
     var sourceId:Long?              = null              //数据源ID
     var cmd                         = ""                //代码或者脚本
     var resultType                  = RESULT_OBJECT     //结果格式（针对 mode=sql）
 }
 
-class FuncContext(val appId:String,val params:MutableMap<String, Any>, val user:UserContext)
+class FuncContext(
+    val appId:String,                                   //应用ID
+    val params:MutableMap<String, Any>,                 //入参
+    val user:UserContext,                               //用户信息上下文
+    val devMode:Boolean = false,                        //是否为开发者模式
+) {
+    val logs = mutableListOf<String>()
+    var result:Any?     = null
+
+    /**
+     * 增加日志行
+     */
+    fun appendLog(msg:String):Unit {
+        logs.add(msg)
+    }
+
+    fun appendException(e:Throwable) {
+        logs.add("-------------------------- EXCEPTION --------------------------")
+        logs.add(ExceptionUtils.getMessage(e))
+    }
+}
 
 /**
  * 登录用户上下文对象

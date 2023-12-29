@@ -47,6 +47,11 @@ class FaasService(private val sqlExecutor: SQLExecutor, private val jsExecutor: 
                 }
             }
         }
+
+        if(func.paramsLimit){
+            val ids = func.params.map { it.id }
+            params.keys.filter { !ids.contains(it) }.forEach{ k-> params.remove(k) }
+        }
     }
 
     /**
@@ -54,6 +59,7 @@ class FaasService(private val sqlExecutor: SQLExecutor, private val jsExecutor: 
      */
     fun execute(func:Func, context: FuncContext):Any? {
         checkParams(func, context.params)
+        if(logger.isDebugEnabled)   logger.debug("修正后参数：${context.params}")
 
         return when(func.mode){
             Func.SQL    -> sqlExecutor.run(func, context)

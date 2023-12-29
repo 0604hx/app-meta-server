@@ -17,6 +17,7 @@ import org.appmeta.domain.TerminalLog
 import org.appmeta.domain.TerminalLogDetail
 import org.appmeta.domain.TerminalLogDetailMapper
 import org.appmeta.service.AppRoleService
+import org.appmeta.service.LogAsync
 import org.appmeta.service.TerminalService
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
@@ -98,7 +99,9 @@ class ProxyCtrl(
     private val logDetailM:TerminalLogDetailMapper,
     private val settingS: SettingService,
     private val service: ProxyService,
-    private val route: ServiceRoute, private val terminalS:TerminalService) : CommonCtrl(){
+    private val route: ServiceRoute,
+    private val logAsync: LogAsync,
+    private val terminalS:TerminalService) : CommonCtrl(){
 
     @RequestMapping("service/{aid}/**", name = "应用后台服务")
     fun redirect(@PathVariable aid:String, response:HttpServletResponse):ResponseEntity<*> {
@@ -169,7 +172,7 @@ class ProxyCtrl(
             ResponseEntity(Result.fail(e), HttpStatus.INTERNAL_SERVER_ERROR)
         }
         finally {
-            terminalS.addLog(log, if(saveDetail) logDetail else null)
+            logAsync.save(log, if(saveDetail) logDetail else null)
         }
     }
 }

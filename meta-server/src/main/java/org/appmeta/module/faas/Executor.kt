@@ -36,6 +36,10 @@ class SQLExecutor(private val dataSourceS:DatabaseSourceService, private val dbS
         Assert.isTrue(func.sourceId != null, "函数未配置数据源")
 
         val sql = Handlebars().compileInline(func.cmd).apply(context)
+        if(context.devMode){
+            return context.appendLog("[DEV-SQL] 执行语句 $sql")
+        }
+
         logger.info("执行sql：${sql}")
 
         return if(func.sourceId == 0L){
@@ -59,5 +63,17 @@ class SQLExecutor(private val dataSourceS:DatabaseSourceService, private val dbS
 
             dbmResult as List<*>
         }
+    }
+}
+
+/**
+ * 用于测试环境的 SQL 执行器
+ */
+class SQLDevExecutor:Executor {
+    override fun run(func: Func, context: FuncContext): Any? {
+        Assert.isTrue(func.sourceId != null, "函数未配置数据源")
+
+        val sql = Handlebars().compileInline(func.cmd).apply(context)
+        return context.appendLog("[DEV-SQL] 执行语句 $sql")
     }
 }

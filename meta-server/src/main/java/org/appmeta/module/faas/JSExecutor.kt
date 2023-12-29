@@ -11,6 +11,7 @@ import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.HostAccess
 import org.graalvm.polyglot.io.IOAccess
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.OutputStream
@@ -25,24 +26,65 @@ import java.io.OutputStream
  * --------------------------------------------------------------
  */
 
-class MetaRuntime(
-    val appId:String,
-    val sourceId:Long?,
-    val dbService: DatabaseService,
-    val dataService: DataService,
-    val sessionStore: MutableMap<String, Any?>
-) {
+interface MetaRuntime {
+    private val logger: Logger
+        get() = LoggerFactory.getLogger(javaClass)
 
-    private val logger = LoggerFactory.getLogger(javaClass)
-
-    private fun _log(msg:String, isDebug:Boolean=true){
+    fun _log(msg:String, isDebug:Boolean=true){
         if(isDebug)
             if(logger.isDebugEnabled)   logger.debug("[META] $msg")
         else
             logger.info("[META] $msg")
     }
 
-    fun sql(text:String):Any {
+    fun sql(text: String):Any
+
+    fun getBlock(uuid: String):String?
+    fun setBlock(uuid: String, text: String)
+
+    fun getSession(uuid: String, defaultVal:Any?=null): Any?
+    fun setSession(uuid: String, obj:Any?)
+}
+
+/**
+ * 测试模式下的 JS 环境
+ */
+class MetaRuntimeDevImpl(val context: FuncContext) : MetaRuntime {
+    private fun logToContext(msg: String) = "[DEV-JS] $msg".also {
+        context.appendLog(it)
+        _log(it)
+    }
+
+    override fun sql(text: String): Any = logToContext("执行SQL > $text")
+
+    override fun getBlock(uuid: String): String? {
+        logToContext("<BLOCK> 获取数据块 #$uuid （AID=${context.appId}）")
+        return uuid
+    }
+
+    override fun setBlock(uuid: String, text: String) {
+        logToContext("<BLOCK> 更新数据块 #$uuid （AID=${context.appId}）为：$text")
+    }
+
+    override fun getSession(uuid: String, defaultVal:Any?): Any? {
+        logToContext("<SESSION> 获取会话值 #$uuid （默认值=${defaultVal}）")
+        return defaultVal
+    }
+
+    override fun setSession(uuid: String, obj: Any?) {
+        logToContext("<SESSION> 更新会话值 #$uuid 为：${JSON.toJSONString(obj)}")
+    }
+}
+
+class MetaRuntimeImpl(
+    val appId:String,
+    val sourceId:Long?,
+    val dbService: DatabaseService,
+    val dataService: DataService,
+    val sessionStore: MutableMap<String, Any?>
+):MetaRuntime  {
+
+    override fun sql(text:String):Any {
         if(sourceId == null)    throw Exception("未关联数据源，无法执行SQL")
         if(sourceId == 0L)      return SqlRunner.db().selectList(text)
 
@@ -53,22 +95,22 @@ class MetaRuntime(
         return dbService.runSQL(model)
     }
 
-    fun setBlock(uuid:String, text: String) {
+    override fun setBlock(uuid:String, text: String) {
         _log("设置(AID=${appId}) uuid=$uuid 的 Block...")
         dataService.setBlockTo(DataBlock(appId, uuid, text))
     }
 
-    fun getBlock(uuid: String): String? {
+    override fun getBlock(uuid: String): String? {
         _log("获取(AID=${appId}) uuid=${uuid} 的 Block...")
         return dataService.getBlockBy(DataBlock(appId, uuid))?.text
     }
 
-    fun getSession(uuid: String): Any? {
-        _log("获取会话值 ID=$uuid")
-        return sessionStore.get(uuid)
+    override fun getSession(uuid: String, defaultVal:Any?): Any? {
+        _log("获取会话值 ID=$uuid （默认值=${defaultVal}）")
+        return sessionStore.getOrDefault(uuid, defaultVal)
     }
 
-    fun setSession(uuid: String, obj:Any?) {
+    override fun setSession(uuid: String, obj:Any?) {
         _log("设置会话值 $uuid = $obj")
         sessionStore[uuid] = obj
     }
@@ -104,7 +146,10 @@ class JSExecutor(
                 bytes.add(b.toByte())
 
                 if(b==10){
-                    logger.info("[JS引擎] ${String(bytes.subList(cur, bytes.size-1).toByteArray())}")
+                    val line = String(bytes.subList(cur, bytes.size-1).toByteArray())
+                    logger.info("[JS引擎] $line")
+                    context.appendLog(line)
+
                     cur = bytes.size
                 }
             }
@@ -126,16 +171,26 @@ class JSExecutor(
         ctxBindings.putMember("params", context.params)
         ctxBindings.putMember("user", context.user.toMap())
         ctxBindings.putMember("appId", context.appId)
-        ctxBindings.putMember("meta", MetaRuntime(
-            context.appId,
-            func.sourceId,
-            dbService,
-            dataS,
-            sessionData[context.appId]!!
-        ))
+        ctxBindings.putMember(
+            "meta",
+            if(context.devMode)
+                MetaRuntimeDevImpl(context)
+            else
+                MetaRuntimeImpl(
+                    context.appId,
+                    func.sourceId,
+                    dbService,
+                    dataS,
+                    sessionData[context.appId]!!
+                )
+        )
 
         return ctx.eval(Func.JS, func.cmd).let {
+            if(it.isNull)           return null
+            if(it.isException)      return it.throwException()
+            //转换 JSON 格式
             JSON.parse(it.toString())
+
 //            if(it.isNull)           return null
 //            if(it.isString)         return it.asString()
 //            if(it.isHostObject)     return it.asHostObject()
