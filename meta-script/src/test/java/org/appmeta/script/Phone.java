@@ -22,6 +22,12 @@ public class Phone {
         System.out.println("[JAVA] 打给%s（本机号码 %s）".formatted(target, number));
     }
 
+    public void test(Map<String, Object> map){
+        System.out.println(map.getClass());
+        System.out.println(map);
+        System.out.println(map.get("address"));
+    }
+
     public Map<String, Object> mime() throws InterruptedException {
         System.out.println("[JAVA] 等待2秒返回...");
         Thread.sleep(2000);

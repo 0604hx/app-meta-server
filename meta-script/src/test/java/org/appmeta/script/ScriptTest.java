@@ -70,6 +70,7 @@ public class ScriptTest {
                 }
                 console.log(name, JSON.stringify(phone), phone.number)
                 phone.call('hello')
+                phone.test({name, address:"中国广西南宁市"})
                 let { mime, date } = phone.mime()
                 console.log(`从 JAVA 中获取的 MIME=`, mime);
                 

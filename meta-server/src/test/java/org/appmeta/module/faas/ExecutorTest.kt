@@ -46,15 +46,20 @@ class ExecutorTest:AppTest() {
     fun js(){
         val code = """
             console.log(`调用JS脚本，参数`, params, "用户ID", user.id)
+            console.log("meta对象：", meta)
             console.debug(`即将返回当前时间戳...`)
             
             let appList = meta.sql(params.sql)
-            console.debug(appList[0])
+            console.debug("SQL执行结果：", appList)
             
             const ID = "js-time"
             //获取 Block
             console.debug(`获取ID=time的数据块：`, meta.getBlock(ID))
             //meta.setBlock(ID, Date().toString())
+            
+            meta.insertData({...params, uuid: Date.now()})
+            console.debug("查询数据", meta.queryData({id:1, match:[{field:"name", op:"EQ", value:"集成显卡"}]}));
+            meta.removeData({id:30})
             
             meta.setSession(ID, ["ABC", "DEF"])
             console.debug(`获取ID=time的会话值：`, meta.getSession(ID));
@@ -70,7 +75,8 @@ class ExecutorTest:AppTest() {
                         "name"  to "集成显卡",
                         "sql"   to "SELECT id,name FROM app"
                     ),
-                    UserContext(UID, UNAME)
+                    UserContext(UID, UNAME),
+                    true
                 )
             )
         )

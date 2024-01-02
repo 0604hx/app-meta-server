@@ -109,7 +109,7 @@ abstract class DataModel(val action:String = CREATE): PageWithUser() {
     }
 }
 
-class DataCreateModel: DataModel(){
+class DataCreateModel: DataModel() {
     var objs    = listOf<Map<String, Any>>()
     var origin  = ""
     var channel = ""

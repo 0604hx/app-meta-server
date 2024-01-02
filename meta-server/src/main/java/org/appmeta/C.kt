@@ -14,6 +14,7 @@ object Channels {
     const val CLIENT    = "client"      //客户端
     const val MOBILE    = "mobile"      //移动端
     const val CLI       = "cli"         //终端命令行
+    const val FAAS      = "faas"        //FaaS函数
 }
 
 object F {
@@ -92,6 +93,7 @@ enum class Role {
     NORMAL,
     ADMIN,
     DEPLOYER,
+    DEVELOPER,
 
     DBM,
     DBM_ADMIN,
