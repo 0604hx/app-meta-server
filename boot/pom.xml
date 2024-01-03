@@ -21,7 +21,7 @@
         <maven.test.skip>true</maven.test.skip>
 
         <version.mysql>8.0.33</version.mysql>
-        <version.mybatis-plus>3.5.4.1</version.mybatis-plus>
+        <version.mybatis-plus>3.5.5</version.mybatis-plus>
         <version.fastjson>2.0.42</version.fastjson>
         <commons.lang3>3.12.0</commons.lang3>
         <commons.io>2.11.0</commons.io>

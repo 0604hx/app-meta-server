@@ -10,16 +10,13 @@ import org.appmeta.F.ID
 import org.appmeta.F.LABEL
 import org.appmeta.F.LAUNCH
 import org.appmeta.F.NAME
-import org.appmeta.F.PID
 import org.appmeta.F.TEMPLATE
 import org.appmeta.F.UID
 import org.appmeta.F.VALUE
 import org.appmeta.component.AppConfig
-import org.appmeta.component.SystemConfig
 import org.appmeta.domain.*
 import org.appmeta.model.OverviewResultModel
 import org.appmeta.module.dbm.DatabaseSourceMapper
-import org.appmeta.module.openapi.ApiMapper
 import org.nerve.boot.util.DateUtil
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -41,7 +38,6 @@ import java.util.*
 class DashboardService(
     private val memberM:MemberMapper,
     private val dbSourceM:DatabaseSourceMapper,
-    private val apiMapper: ApiMapper,
     private val pageM:PageMapper,
     private val pageLinkM:PageLinkMapper,
     private val documentM:DocumentMapper,
@@ -71,8 +67,7 @@ class DashboardService(
                 buildAmountItem("数据量", dataM.selectCount(null), "条"),
                 buildAmountItem("文档 / 附件", documentM.selectCount(null), "份"),
                 buildAmountItem("终端会员", memberM.selectCount(null)),
-                buildAmountItem("数据源", dbSourceM.selectCount(null)),
-                buildAmountItem("开放接口", apiMapper.selectCount(null))
+                buildAmountItem("数据源", dbSourceM.selectCount(null))
             ),
             pageM
                 .selectMaps(QueryWrapper<Page>().select("$TEMPLATE as $LABEL", "count(*) as $VALUE").groupBy(TEMPLATE))

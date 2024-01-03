@@ -391,31 +391,6 @@ CREATE TABLE `dbm_log` (
   KEY `sid_IDX` (`sourceId`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `api` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `pid` bigint DEFAULT NULL,
-  `uid` varchar(15) NOT NULL,
-  `name` varchar(200) DEFAULT '',
-  `launch` int DEFAULT 0 COMMENT '页面执行次数',
-  PRIMARY KEY (`id`),
-  KEY `pid_IDX` (`pid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE `api_detail` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `uid` varchar(15) NOT NULL,
-  `active` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否生效，0=不生效（前端不展示），1=生效',
-  `serviceAuth` text COMMENT '访问授权，{标识，U为用户，D为部门}|{ID}',
-  `editAuth` text COMMENT '编辑授权，{标识，U为用户，D为部门}|{ID}',
-  `summary` text,
-  `params` text,
-  `sourceId` bigint DEFAULT NULL,
-  `cmd` text,
-   `resultType` varchar(15) NOT NULL DEFAULT 'Object',
-  `addOn` bigint NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 -- 系统功能表
 
 -- sys_export_log definition

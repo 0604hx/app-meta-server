@@ -34,7 +34,7 @@ public class CacheConfiguration extends CachingConfigurerSupport {
 
 	@PostConstruct
 	protected void init(){
-		logger.info("[Cache] 初始化 CacheConfiguration ( set nerve.cache.enable=false if you want to disable customed cache!)");
+		logger.info("[Cache] 初始化 CacheConfiguration (set nerve.cache.enable=false if you want to disable customed cache)");
 		if(logger.isDebugEnabled())
 			logger.debug("[Cache] {}", cacheConfig.caches);
 	}

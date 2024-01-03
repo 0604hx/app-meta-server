@@ -5,6 +5,7 @@ import com.github.jknack.handlebars.Handlebars
 import org.appmeta.module.dbm.DatabaseService
 import org.appmeta.module.dbm.DatabaseSourceService
 import org.appmeta.module.dbm.DbmModel
+import org.nerve.boot.util.DateUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -37,7 +38,8 @@ class SQLExecutor(private val dataSourceS:DatabaseSourceService, private val dbS
 
         val sql = Handlebars().compileInline(func.cmd).apply(context)
         if(context.devMode){
-            return context.appendLog("[DEV-SQL] 执行语句 $sql")
+            context.appendLog("[DEV-SQL] 执行语句 $sql")
+            return DateUtil.getDateTime()
         }
 
         logger.info("执行sql：${sql}")
@@ -63,17 +65,5 @@ class SQLExecutor(private val dataSourceS:DatabaseSourceService, private val dbS
 
             dbmResult as List<*>
         }
-    }
-}
-
-/**
- * 用于测试环境的 SQL 执行器
- */
-class SQLDevExecutor:Executor {
-    override fun run(func: Func, context: FuncContext): Any? {
-        Assert.isTrue(func.sourceId != null, "函数未配置数据源")
-
-        val sql = Handlebars().compileInline(func.cmd).apply(context)
-        return context.appendLog("[DEV-SQL] 执行语句 $sql")
     }
 }

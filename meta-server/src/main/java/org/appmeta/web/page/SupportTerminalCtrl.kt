@@ -16,6 +16,7 @@ import org.appmeta.domain.TerminalLogMapper
 import org.appmeta.model.*
 import org.appmeta.service.TerminalService
 import org.appmeta.tool.FileTool
+import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.FileStore
 import org.nerve.boot.Result
 import org.nerve.boot.module.operation.Operation
@@ -78,7 +79,14 @@ class SupportTerminalCtrl (
     @RequestMapping("trace-{aid}", name = "按应用查询后端服务记录")
     fun logList(@RequestBody model: QueryModel, @PathVariable aid:String) = _checkEditAuth(_load(aid).pid) {_, _ ->
         Result().also {
-            it.data = service.logList(model.form, model.pagination, aid)
+            println(JSON.toJSONString(model))
+            var pid = EMPTY
+            if(model.form.containsKey(F.PID)){
+                pid = model.form[F.PID] as String
+                model.form[F.PID] as String
+                model.form.remove(F.PID)
+            }
+            it.data = service.logList(model.form, model.pagination, aid, pid)
             it.total= model.pagination.total
         }
     }

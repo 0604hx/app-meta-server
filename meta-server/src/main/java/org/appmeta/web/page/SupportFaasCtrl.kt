@@ -57,9 +57,15 @@ class SupportFaasCtrl(
     }
 
     /**
+     * 方便前端通过 H.service 调用
+     */
+    @PostMapping("service/_f_a_a_s_/{id}")
+    fun faasWithService(@PathVariable id:Long) = faas(id)
+
+    /**
      * 调用日志记录到 TerminalLog
      * host 为功能 ID
-     * code 恒定为 -1
+     * code 恒定为 0
      * url  为参数
      * summary 为函数输出的日志+报错信息
      */
@@ -102,10 +108,6 @@ class SupportFaasCtrl(
         }
         else{
             reqQueryParams
-            //                request.parameterNames.toList().let {
-            //                    it.forEach { key-> ps[key] = request.getParameter(key) }
-            //                    ps
-            //                }
         }
 
         if(logger.isDebugEnabled)   logger.debug("原始入参：${originParams}")
@@ -131,7 +133,7 @@ class SupportFaasCtrl(
         }
     }
 
-    inner class FaasDevModel: IdModel() {
+    class FaasDevModel: IdModel() {
         var func:Func?  = null
         var params      = mutableMapOf<String, Any>()
         var uid         = ""
@@ -141,6 +143,8 @@ class SupportFaasCtrl(
     fun faasWithDev(@RequestBody model:FaasDevModel) = resultWithData {
         val page = pageS.getOne(QueryWrapper<Page>().eq(ID, model.id).eq(TEMPLATE, FAAS))?: throw Exception("FaaS函数不存在（请先创建再调试）")
         val user = authHolder.get()
+        logger.info("${user.showName} 进行函数#${page.id}的测试，参数：${model.params}")
+
         //判断权限
         if(!H.hasAnyRole(user, Role.DEVELOPER, Role.ADMIN))
             throw Exception("该功能仅限 ${Role.ADMIN}、${Role.DEVELOPER} 角色")
@@ -157,9 +161,12 @@ class SupportFaasCtrl(
                 true
             )
             context.appendLog("开始进行函数#${model.id}的模拟运行：\n\t[参数] ${model.params}\n\t[用户] ${context.user.id}")
+            context.appendLog(NEW_LINE)
 
             try {
                 service.execute(func, context).also { funResult->
+                    if(logger.isDebugEnabled)   logger.debug("FaaS 函数模拟完成: {}", funResult)
+
                     context.result = funResult
                 }
             }catch (e:Exception){
@@ -167,8 +174,9 @@ class SupportFaasCtrl(
                 context.appendException(e)
             }finally {
                 context.appendLog("\n函数执行完毕，耗时 ${timing.toSecondStr()} 秒")
-                context
             }
+
+            context
         }
     }
 }

@@ -134,15 +134,19 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-<!--                <configuration>-->
-<!--                    &lt;!&ndash;瘦 JAR 打包方案&ndash;&gt;-->
-<!--                    <includes>-->
-<!--                        <include>-->
-<!--                            <groupId>org.nerve</groupId>-->
-<!--                            <artifactId>app-meta-server</artifactId>-->
-<!--                        </include>-->
-<!--                    </includes>-->
-<!--                </configuration>-->
+                <configuration>
+                    <!--瘦 JAR 打包方案-->
+                    <includes>
+                        <include>
+                            <groupId>org.nerve</groupId>
+                            <artifactId>meta-server</artifactId>
+                        </include>
+                        <include>
+                            <groupId>org.nerve</groupId>
+                            <artifactId>boot</artifactId>
+                        </include>
+                    </includes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

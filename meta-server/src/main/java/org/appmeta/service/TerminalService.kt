@@ -60,13 +60,17 @@ class TerminalService(
         return JSON.parseObject(page.content, Terminal::class.java)?.also {  it.pid = "${page.id}" }
     }
 
-    fun logList(params:Map<String, Any>, pagination: Pagination, aid:String=EMPTY): List<TerminalLog> {
+    fun logList(params:Map<String, Any>, pagination: Pagination, aid:String=EMPTY, pid:String= EMPTY): List<TerminalLog> {
         val p = PageDTO<TerminalLog>(
             pagination.page.toLong(),
             pagination.pageSize.toLong()
         )
         val q = queryHelper.buildFromMap(params)
         if(hasText(aid))    q.eq(F.AID, aid)
+        if(hasText(pid)){
+            // 查询 FaaS 记录
+            q.eq(F.HOST, pid).eq(F.CODE, 0)
+        }
         q.orderByDesc(F.ID)
 
         logM.selectPage(p, q)

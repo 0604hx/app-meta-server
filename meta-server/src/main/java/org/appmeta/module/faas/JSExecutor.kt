@@ -195,7 +195,9 @@ class JSExecutor(
     private val dataSourceS: DatabaseSourceService,
     private val dbService: DatabaseService):Executor {
 
-    private val engine: Engine = Engine.newBuilder().option("engine.WarnInterpreterOnly", "false").build()
+    private val engine: Engine = Engine.newBuilder()
+        .option("engine.WarnInterpreterOnly", "false")
+        .build()
 
     /**
      * 转换为指定的数据对象，支持不加双引号

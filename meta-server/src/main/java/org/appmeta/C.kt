@@ -75,6 +75,9 @@ object F {
     const val BATCH     = "batch"
     const val BATCH_    = "_batch_"
     const val USER      = "user"
+
+    const val HOST      = "host"
+    const val CODE      = "code"
 }
 
 enum class Forms {
