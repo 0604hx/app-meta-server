@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.util.StringUtils
 import java.io.OutputStream
-
+import java.nio.charset.Charset
 
 /*
  * @project app-meta-server
@@ -195,6 +195,8 @@ class JSExecutor(
     private val dataSourceS: DatabaseSourceService,
     private val dbService: DatabaseService):Executor {
 
+    private val regexList = Regex("(^\\([0-9]+\\))\\[.*]$")
+
     private val engine: Engine = Engine.newBuilder()
         .option("engine.WarnInterpreterOnly", "false")
         .build()
@@ -255,7 +257,7 @@ class JSExecutor(
                 bytes.add(b.toByte())
 
                 if(b==10){
-                    val line = String(bytes.subList(cur, bytes.size-1).toByteArray())
+                    val line = String(bytes.subList(cur, bytes.size-1).toByteArray(), Charset.defaultCharset())
                     logger.info("[JS引擎] $line")
                     context.appendLog(line)
 
@@ -297,8 +299,17 @@ class JSExecutor(
         return ctx.eval(Func.JS, func.cmd).let {
             if(it.isNull)           return null
             if(it.isException)      return it.throwException()
+
+            var body = it.toString()
+            if(logger.isDebugEnabled)   logger.debug("JS代码执行结果：$body")
+
+            regexList.find(body)?.also { m->
+                if(logger.isDebugEnabled)   logger.debug("结果为数组，即将替换开头的 ([0-9]+)")
+                body = body.replaceFirst(m.groupValues.last(), "")
+            }
+
             //转换 JSON 格式
-            JSON.parse(it.toString())
+            JSON.parse(body, JSONReader.Feature.AllowUnQuotedFieldNames)
 
 //            if(it.isNull)           return null
 //            if(it.isString)         return it.asString()

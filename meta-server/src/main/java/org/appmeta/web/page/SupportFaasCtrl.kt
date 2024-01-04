@@ -128,6 +128,9 @@ class SupportFaasCtrl(
                 log.uid         = if(user == null) EMPTY else user.id
                 log.used        = timing.toMillSecond()
                 log.summary     = context.logs.joinToString(NEW_LINE)
+                if(context.params.isNotEmpty())
+                    log.url     = JSON.toJSONString(context.params)
+
                 logAsync.save(log)
             }
         }
