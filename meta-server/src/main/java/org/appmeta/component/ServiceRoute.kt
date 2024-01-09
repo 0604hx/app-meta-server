@@ -36,6 +36,10 @@ class ServiceRoute {
         return restTemplate.exchange(entity, ByteArray::class.java)
     }
 
+    fun requestDo(targetUrl: String, params:Map<String, Any?>, extraHeaders: Map<String, String?>?) {
+        TODO()
+    }
+
     fun redirect(request:HttpServletRequest, response:HttpServletResponse, targetUrl:String, headers: Map<String, String?>?=null):ResponseEntity<ByteArray> {
         val entity = createRequestEntity(request, null, targetUrl, headers)
         return restTemplate.exchange(entity, ByteArray::class.java)

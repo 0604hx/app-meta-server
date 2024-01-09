@@ -5,6 +5,7 @@ import org.appmeta.F
 import org.appmeta.domain.Account
 import org.appmeta.domain.Department
 import org.appmeta.domain.NameBean
+import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.domain.AuthUser
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -92,6 +93,7 @@ class UserContext : NameBean {
     var roles                       = listOf<String>()
     var appRoles                    = listOf<String>()
     var appAuths                    = listOf<String>()
+    private var inited              = false
 
     constructor()
     constructor(id:String, name:String) {
@@ -101,12 +103,14 @@ class UserContext : NameBean {
     constructor(account: Account):this(account.id, account.name)
     constructor(user:AuthUser): this(user.id, user.name) {
         this.roles = user.roles
-        this.ip = user.ip
+        this.ip = user.ip?:EMPTY
     }
 
     companion object {
         fun empty() = UserContext()
     }
+
+    fun showName() = "$name($id)"
 
     fun toMap() = mapOf(
         F.ID        to id,
@@ -119,4 +123,11 @@ class UserContext : NameBean {
         "appRoles"  to appRoles,
         "appAuths"  to appAuths
     )
+
+    fun toAuthUser() = AuthUser(id, name, ip).also { it.roles = roles }
+
+    fun checkInited() = inited
+    fun setInited() {
+        inited = true
+    }
 }

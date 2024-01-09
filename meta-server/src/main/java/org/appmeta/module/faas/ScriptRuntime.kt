@@ -10,28 +10,70 @@ import org.appmeta.model.DataDeleteModel
 import org.appmeta.model.DataReadModel
 import org.appmeta.model.DataUpdateModel
 import org.appmeta.module.dbm.DatabaseService
-import org.appmeta.module.dbm.DatabaseSourceService
 import org.appmeta.module.dbm.DbmModel
 import org.appmeta.service.DataService
-import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.HostAccess
-import org.graalvm.polyglot.io.IOAccess
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import org.springframework.util.StringUtils
-import java.io.OutputStream
-import java.nio.charset.Charset
+
 
 /*
  * @project app-meta-server
- * @file    org.appmeta.module.faas.JavaScriptExecutor
- * CREATE   2023年12月27日 11:20 上午
+ * @file    org.appmeta.module.faas.ScriptRuntime
+ * CREATE   2024年01月09日 15:34 下午
  * --------------------------------------------------------------
  * 0604hx   https://github.com/0604hx
  * --------------------------------------------------------------
  */
+
+class ScriptEnv {
+    val regexList = Regex("(^\\([0-9]+\\))\\[.*]$")
+
+    val engine: Engine = Engine.newBuilder()
+        .option("engine.WarnInterpreterOnly", "false")
+        .build()
+
+    /**
+     * 转换为指定的数据对象，支持不加双引号
+     */
+    private fun <T> parse(v:Any, clazz: Class<T>) = JSON.parseObject(
+        v.toString(),
+        clazz,
+        JSONReader.Feature.AllowUnQuotedFieldNames
+    )
+
+    /**
+     * 自定义 Java 、JS 互通规则
+     *
+     * 参数定义规则：https://www.graalvm.org/truffle/javadoc/org/graalvm/polyglot/HostAccess.Builder.html#targetTypeMapping-java.lang.Class-java.lang.Class-java.util.function.Predicate-java.util.function.Function-
+     */
+    val hostAccess = HostAccess.newBuilder()
+        .allowPublicAccess(true)
+        .allowAllImplementations(true)
+        .allowAllClassImplementations(true)
+        .allowArrayAccess(true)
+        .allowListAccess(true)
+        .allowBufferAccess(true)
+        .allowIterableAccess(true)
+        .allowIteratorAccess(true)
+        .allowMapAccess(true)
+        .allowAccessInheritance(true)
+        .also {
+            it.targetTypeMapping(Map::class.java, DataReadModel::class.java, { _ -> true}, { v: Map<*, *> -> parse(v, DataReadModel::class.java)} )
+            it.targetTypeMapping(Map::class.java, DataCreateModel::class.java, { _ -> true}, { v: Map<*, *> -> parse(v, DataCreateModel::class.java)} )
+            it.targetTypeMapping(Map::class.java, DataDeleteModel::class.java, { _ -> true}, { v: Map<*, *> -> parse(v, DataDeleteModel::class.java)} )
+        }
+        .build()
+
+
+
+    /**
+     * 目前会话级别的数据存储，平台重启后失效
+     */
+    val sessionData = mutableMapOf<String, MutableMap<String, Any?>>()
+}
 
 interface MetaRuntime {
     val logger: Logger
@@ -40,8 +82,8 @@ interface MetaRuntime {
     fun _log(msg:String, isDebug:Boolean=true){
         if(isDebug)
             if(logger.isDebugEnabled)   logger.debug("[META] $msg")
-        else
-            logger.info("[META] $msg")
+            else
+                logger.info("[META] $msg")
     }
 
     fun sql(text: String):Any
@@ -55,18 +97,29 @@ interface MetaRuntime {
     fun insertData(row: Map<String, Any>) = insertData(listOf(row), DataCreateModel())
     fun insertData(rows: List<Map<String, Any>>, model: DataCreateModel)
     fun updateData(dataId:Long, obj:Map<String, Any>, merge:Boolean)
-    fun queryData(model:DataReadModel):Any?
+    fun queryData(model: DataReadModel):Any?
     fun removeData(model: DataDeleteModel)
 
     fun getSession(uuid: String) = getSession(uuid, null)
     fun getSession(uuid: String, defaultVal:Any?): Any?
     fun setSession(uuid: String, obj:Any?)
+
+    /**
+     * 调用外部的 FaaS 函数
+     */
+    fun faas(id:Int, params:MutableMap<String, Any>):Any?
+//    fun service(id: Int, params: MutableMap<String, Any>):Any?
 }
 
 /**
  * 测试模式下的 JS 环境
  */
 class MetaRuntimeDevImpl(val context: FuncContext) : MetaRuntime {
+    companion object {
+        // 默认的返回值
+        const val DEFAULT_RESULT = "_DEFAULT_RETURN_"
+    }
+
     private fun logToContext(msg: String) = "[DEV-JS] $msg".also {
         context.appendLog(it)
         _log(it)
@@ -109,6 +162,11 @@ class MetaRuntimeDevImpl(val context: FuncContext) : MetaRuntime {
     override fun setSession(uuid: String, obj: Any?) {
         logToContext("<SESSION> 更新会话值 #$uuid 为：${JSON.toJSONString(obj)}")
     }
+
+    override fun faas(id: Int, params: MutableMap<String, Any>): Any? {
+        logToContext("<FAAS> 调用函数#$id 参数 $params")
+        return params.getOrDefault(DEFAULT_RESULT, 0)
+    }
 }
 
 class MetaRuntimeImpl(
@@ -116,7 +174,8 @@ class MetaRuntimeImpl(
     val sourceId:Long?,
     val dbService: DatabaseService,
     val dataService: DataService,
-    val sessionStore: MutableMap<String, Any?>
+    val sessionStore: MutableMap<String, Any?>,
+    val faasRunner: FaasRunner
 ):MetaRuntime  {
 
     override fun sql(text:String):Any {
@@ -187,143 +246,9 @@ class MetaRuntimeImpl(
         _log("设置会话值 $uuid = $obj")
         sessionStore[uuid] = obj
     }
-}
 
-@Component
-class JSExecutor(
-    private val dataS: DataService,
-    private val dataSourceS: DatabaseSourceService,
-    private val dbService: DatabaseService):Executor {
-
-    private val regexList = Regex("(^\\([0-9]+\\))\\[.*]$")
-
-    private val engine: Engine = Engine.newBuilder()
-        .option("engine.WarnInterpreterOnly", "false")
-        .build()
-
-    /**
-     * 转换为指定的数据对象，支持不加双引号
-     */
-    private fun <T> parse(v:Any, clazz: Class<T>) = JSON.parseObject(
-        v.toString(),
-        clazz,
-        JSONReader.Feature.AllowUnQuotedFieldNames
-    )
-
-    /**
-     * 自定义 Java 、JS 互通规则
-     *
-     * 参数定义规则：https://www.graalvm.org/truffle/javadoc/org/graalvm/polyglot/HostAccess.Builder.html#targetTypeMapping-java.lang.Class-java.lang.Class-java.util.function.Predicate-java.util.function.Function-
-     */
-    private val hostAccess = HostAccess.newBuilder()
-        .allowPublicAccess(true)
-        .allowAllImplementations(true)
-        .allowAllClassImplementations(true)
-        .allowArrayAccess(true)
-        .allowListAccess(true)
-        .allowBufferAccess(true)
-        .allowIterableAccess(true)
-        .allowIteratorAccess(true)
-        .allowMapAccess(true)
-        .allowAccessInheritance(true)
-        .also {
-            it.targetTypeMapping(Map::class.java, DataReadModel::class.java, { _ -> true}, { v: Map<*, *> -> parse(v, DataReadModel::class.java)} )
-            it.targetTypeMapping(Map::class.java, DataCreateModel::class.java, { _ -> true}, { v: Map<*, *> -> parse(v, DataCreateModel::class.java)} )
-            it.targetTypeMapping(Map::class.java, DataDeleteModel::class.java, { _ -> true}, { v: Map<*, *> -> parse(v, DataDeleteModel::class.java)} )
-        }
-        .build()
-
-
-
-    /**
-     * 目前会话级别的数据存储，平台重启后失效
-     */
-    private val sessionData = mutableMapOf<String, MutableMap<String, Any?>>()
-
-    override fun run(func: Func, context: FuncContext): Any? {
-        func.sourceId?.also {
-            if(it>0L)
-                dataSourceS.withCache(it)?: throw Exception("数据源#${func.sourceId} 未定义")
-        }
-
-        if(!sessionData.contains(context.appId))
-            sessionData[context.appId] = mutableMapOf()
-
-        val out = object : OutputStream (){
-            val bytes = mutableListOf<Byte>()
-            private var cur = 0
-
-            override fun write(b: Int) {
-                bytes.add(b.toByte())
-
-                if(b==10){
-                    val line = String(bytes.subList(cur, bytes.size-1).toByteArray(), Charset.defaultCharset())
-                    logger.info("[JS引擎] $line")
-                    context.appendLog(line)
-
-                    cur = bytes.size
-                }
-            }
-        }
-
-        val ctx = Context.newBuilder(Func.JS)
-            .engine(engine)
-            //设置为 HostAccess.ALL 后，可以在 js 中调用 java 方法（通过 Bindings 传递），但是不支持使用 Java.type 功能
-            .allowHostAccess(hostAccess)
-            //设置 JS 与 JAVA 的交互性（如 Java.type、Packages ）
-            //.allowAllAccess(true)
-            //不允许IO（如引入外部文件）
-            .allowIO(IOAccess.NONE)
-            .out(out)
-            .build()
-
-
-        val ctxBindings = ctx.getBindings(Func.JS)
-        ctxBindings.putMember("params", context.params)
-        ctxBindings.putMember("user", context.user.toMap())
-        ctxBindings.putMember("appId", context.appId)
-        ctxBindings.putMember(
-            "meta",
-            if(context.devMode)
-                MetaRuntimeDevImpl(context)
-            else
-                MetaRuntimeImpl(
-                    context,
-                    func.sourceId,
-                    dbService,
-                    dataS,
-                    sessionData[context.appId]!!
-                )
-        )
-
-        return ctx.eval(Func.JS, func.cmd).let {
-            if(it.isNull)           return null
-            if(it.isException)      return it.throwException()
-
-            var body = it.toString()
-            if(logger.isDebugEnabled)   logger.debug("JS代码执行结果：$body")
-
-            regexList.find(body)?.also { m->
-                if(logger.isDebugEnabled)   logger.debug("结果为数组，即将替换开头的 ([0-9]+)")
-                body = body.replaceFirst(m.groupValues.last(), "")
-            }
-
-            //转换 JSON 格式
-            JSON.parse(body, JSONReader.Feature.AllowUnQuotedFieldNames)
-
-//            if(it.isNull)           return null
-//            if(it.isString)         return it.asString()
-//            if(it.isHostObject)     return it.asHostObject()
-//            if(it.isBoolean)        return it.asBoolean()
-//            if(it.isDate)           return it.asDate()
-//            if(it.fitsInInt())      return it.asInt()
-//            if(it.fitsInLong())     return it.asLong()
-//            if(it.fitsInShort())    return it.asShort()
-//            if(it.fitsInDouble())   return it.asDouble()
-//            if(it.fitsInByte())     return it.asByte()
-//            if(it.isException)      return it.throwException()
-//
-//            return it.asString()
-        }
+    override fun faas(id: Int, params: MutableMap<String, Any>): Any? {
+        _log("调用 FaaS#$id，参数 $params")
+        return faasRunner.execute(id, params, context.user)
     }
 }

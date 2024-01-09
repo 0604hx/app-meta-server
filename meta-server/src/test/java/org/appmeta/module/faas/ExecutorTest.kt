@@ -17,9 +17,7 @@ import org.junit.jupiter.api.Test
 class ExecutorTest:AppTest() {
 
     @Resource
-    lateinit var sqlExecutor: SQLExecutor
-    @Resource
-    lateinit var jsExecutor: JSExecutor
+    lateinit var runner: FaasRunnerImpl
 
     private fun buildFunc(cmd:String, mode:String=Func.SQL, ps:List<FuncParmeter> = listOf()) = Func().also {
         it.cmd = cmd
@@ -31,7 +29,7 @@ class ExecutorTest:AppTest() {
     @Test
     fun sql(){
         println(
-            sqlExecutor.run(
+            runner.execute(
                 buildFunc("SELECT count(*) as size, template from page where aid='{{appId}}' and template='{{ params.template }}' and uid='{{ user.id }}'"),
                 FuncContext(
                     AID_DEMO,
@@ -67,7 +65,7 @@ class ExecutorTest:AppTest() {
             [{ time: Date.now() }]
         """.trimIndent()
         println(
-            jsExecutor.run(
+            runner.execute(
                 buildFunc(code, Func.JS),
                 FuncContext(
                     AID_DEMO,
@@ -97,7 +95,7 @@ class ExecutorTest:AppTest() {
             [{ time: Date.now(), user: user.id, data: count }]
         """.trimIndent()
         println(
-            jsExecutor.run(
+            runner.execute(
                 buildFunc(code, Func.JS),
                 FuncContext(
                     AID_DEMO,
