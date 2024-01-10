@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.annotation.TableName
 import com.baomidou.mybatisplus.core.mapper.BaseMapper
 import org.apache.ibatis.annotations.Mapper
 import org.apache.ibatis.annotations.Select
+import org.appmeta.Caches
 import org.nerve.boot.annotation.CN
 import org.nerve.boot.db.StringEntity
+import org.springframework.cache.annotation.Cacheable
 
 @CN("用户")
 class Account: NameBean {
@@ -45,6 +47,7 @@ interface AccountPwdMapper:BaseMapper<AccountPwd>
 @Mapper
 interface DepartmentMapper:BaseMapper<Department> {
 
+    @Cacheable(Caches.DEPARTMENT)
     @Select("SELECT d.* FROM department d WHERE d.id=(SELECT a.did FROM account a WHERE a.id=#{0}) LIMIT 1")
     fun loadByUser(uid:String):Department?
 }

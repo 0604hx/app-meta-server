@@ -36,6 +36,7 @@ import java.util.*
 
 @Service
 class DashboardService(
+    private val terminalLogM:TerminalLogMapper,
     private val memberM:MemberMapper,
     private val dbSourceM:DatabaseSourceMapper,
     private val pageM:PageMapper,
@@ -67,7 +68,8 @@ class DashboardService(
                 buildAmountItem("数据量", dataM.selectCount(null), "条"),
                 buildAmountItem("文档 / 附件", documentM.selectCount(null), "份"),
                 buildAmountItem("终端会员", memberM.selectCount(null)),
-                buildAmountItem("数据源", dbSourceM.selectCount(null))
+                buildAmountItem("数据源", dbSourceM.selectCount(null)),
+                buildAmountItem("服务响应", terminalLogM.selectCount(null), "次")
             ),
             pageM
                 .selectMaps(QueryWrapper<Page>().select("$TEMPLATE as $LABEL", "count(*) as $VALUE").groupBy(TEMPLATE))
@@ -82,7 +84,8 @@ class DashboardService(
                "os"         to "${System.getProperty("os.name")}/${System.getProperty("os.version")}",
                "osCpu"      to "${sys.arch}/${sys.availableProcessors}核",
                "osMem"      to sys.totalMemorySize / MB,
-               "osMemFree"  to sys.freeMemorySize / MB
+               "osMemFree"  to sys.freeMemorySize / MB,
+               "jdk"        to System.getProperty("java.version")
            )
         )
     }

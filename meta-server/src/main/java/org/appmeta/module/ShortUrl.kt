@@ -7,8 +7,10 @@ import jakarta.servlet.http.HttpServletResponse
 import org.apache.ibatis.annotations.Mapper
 import org.appmeta.F
 import org.appmeta.S
+import org.appmeta.model.FieldModel
 import org.appmeta.model.TextModel
 import org.nerve.boot.Const
+import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.annotation.CN
 import org.nerve.boot.db.StringEntity
 import org.nerve.boot.module.setting.SettingService
@@ -116,15 +118,24 @@ class ShortUrlCtrl(private val settingS:SettingService,private val provier: Shor
     private val contextPath = ""
 
     @PostMapping("create", name = "生成短链接")
-    fun create(@RequestBody model:TextModel) = resultWithData {
-        Assert.isTrue(model.text.startsWith("/"), "长链接必须以 / 开头")
+    fun create(@RequestBody model:FieldModel) = resultWithData {
+        Assert.isTrue(model.key.startsWith("/"), "长链接必须以 / 开头")
 
-        MD5Util.encode(model.text).substring(8, 16).also {
-            if(!provier.exit(it)){
-                provier.add(it, model.text)
-                logger.info("创建短链接 $it >> ${model.text}")
-            }
+        var uuid = if(model.id is String) (model.id as String).trim() else EMPTY
+        if(!StringUtils.hasText(uuid))
+            uuid = MD5Util.encode(model.key).substring(8, 16)
+
+        if(provier.exit(uuid)){
+            val url = provier.get(uuid)
+            if(url != model.key)
+                throw Exception("短链接 $uuid 已存在：$url")
         }
+        else {
+            provier.add(uuid, model.key)
+            logger.info("创建短链接 $uuid >> ${model.key}")
+        }
+
+        uuid
     }
 
     @GetMapping("{uuid}", name = "短链接自动跳转")
@@ -132,6 +143,10 @@ class ShortUrlCtrl(private val settingS:SettingService,private val provier: Shor
         val url = provier.get(uuid)?: throw Exception("短链接不存在")
 
         logger.info("短链接跳转 $uuid >> $url")
-        response.sendRedirect("${settingS.value(S.SYS_HOST)}${contextPath}${url}")
+        settingS.value(S.SYS_HOST).also { host->
+            val redirect = "${host?: EMPTY}${contextPath}${url}"
+            if(logger.isDebugEnabled)   logger.debug("SYS_HOST=$host，短链接 $uuid 跳转完整地址 $redirect")
+            response.sendRedirect(redirect)
+        }
     }
 }

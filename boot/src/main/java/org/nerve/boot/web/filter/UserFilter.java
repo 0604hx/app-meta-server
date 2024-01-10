@@ -104,7 +104,6 @@ public class UserFilter implements AsyncHandlerInterceptor {
         }
 
         final AuthUser user = userLoader.from(request.getHeader(config.getTokenName()));
-//        Assert.notNull(user, "NOT LOGIN");
         if(user == null){
             logger.info("[NOT LOGIN] {} 匿名请求 {}", ip, uri);
             response.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
