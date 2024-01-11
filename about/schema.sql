@@ -74,6 +74,7 @@ CREATE TABLE `app_role` (
   `uuid` varchar(100) NOT NULL,
   `name` varchar(100) DEFAULT NULL,
   `auth` text,
+  `ip` varchar(255) DEFAULT NULL,
   `summary` varchar(255) DEFAULT NULL,
   `addOn` bigint DEFAULT NULL,
   PRIMARY KEY (`aid`,`uuid`),

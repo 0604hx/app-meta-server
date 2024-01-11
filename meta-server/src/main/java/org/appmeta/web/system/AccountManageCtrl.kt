@@ -1,5 +1,6 @@
 package org.appmeta.web.system
 
+import org.appmeta.H
 import org.appmeta.Role
 import org.appmeta.S
 import org.appmeta.domain.Account
@@ -105,7 +106,8 @@ class AccountManageCtrl(
             Assert.isTrue(!StringUtils.hasText(roleValue), "角色参数不能为空")
             val role = roleM.selectById(roleValue)?: throw Exception("角色 $roleValue 不存在")
 
-            val roles = roleLink.roles.split(COMMA).map { it.trim() }.toMutableSet()
+            //roleLink.roles.split(COMMA).map { it.trim() }
+            val roles = H.splitToList(roleLink.roles).toMutableSet()
             if(model.key == "add")
                 roles.add(role.id)
             else

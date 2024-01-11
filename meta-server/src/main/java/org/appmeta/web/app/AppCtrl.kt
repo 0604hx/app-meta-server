@@ -191,7 +191,13 @@ class AppCtrl(
     fun updateRole(@RequestBody role: AppRole) = _checkEditAuth(role.aid) { _,_ -> roleS.updateRole(role) }
 
     @PostMapping("role/check", name = "检测用户对指定URL的访问权限")
-    fun checkRoleAuth(@RequestBody link:AppRoleLink) = resultWithData { roleS.checkAuth(link.aid, link.uid, link.role) }
+    fun checkRoleAuth(@RequestBody model:AppRole) = resultWithData {
+        roleS.checkAuth(
+            model.aid,
+            AuthUser(model.uuid, EMPTY, model.ip),
+            model.auth
+        )
+    }
 
     @PostMapping("role/link", name = "分配应用角色到用户")
     fun roleLink(@RequestBody link:AppRoleLink) = _checkEditAuth(link.aid) { app,_ ->

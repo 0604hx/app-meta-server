@@ -20,6 +20,7 @@ class AppTest {
 		user.id = uid
 		user.roles = listOf()
 		user.name = UNAME
+		user.ip	= "127.0.0.1"
 
 		return user
 	}

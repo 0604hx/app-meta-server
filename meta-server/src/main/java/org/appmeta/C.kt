@@ -1,5 +1,6 @@
 package org.appmeta
 
+import org.nerve.boot.Const.COMMA
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.util.DateUtil
 
@@ -194,4 +195,6 @@ object H {
      * 判断是否具备全部给定权限
      */
     fun hasAllRole(user: AuthUser, vararg roles: Role) = roles.all { user.hasRole(it) }
+
+    fun splitToList(text:String?) = if(text.isNullOrBlank()) emptyList() else text.split(COMMA).map { it.trim() }
 }

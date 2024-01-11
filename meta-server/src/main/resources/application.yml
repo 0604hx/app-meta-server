@@ -46,6 +46,7 @@ nerve:
       - /login_with_cas_bck
       - /outreach/**
       - /faas/**
+      - /service/**
     innerUrls:
       - /query
       - /whoami
@@ -55,7 +56,6 @@ nerve:
       - /data/**
       - /form/**
       - /page/**
-      - /service/**
       - /notice/**
       - /account/**
       - /worker/run-robot

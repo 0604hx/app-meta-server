@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Mapper
 import org.apache.ibatis.annotations.Param
 import org.apache.ibatis.annotations.Select
 import org.appmeta.Caches
+import org.appmeta.H
 import org.appmeta.Role
 import org.nerve.boot.Const.COMMA
 import org.nerve.boot.annotation.CN
@@ -95,10 +96,12 @@ class AppRole {
 	var uuid 	= ""
 	var name 	= ""
 	var auth 	= ""
+	var ip		= ""
 	var summary = ""
 	var addOn 	= 0L
 
-	fun authList() = auth.split(COMMA).map { it.trim() }
+	fun authList() 	= H.splitToList(auth)
+	fun ipList() 	= H.splitToList(ip)
 }
 
 @CN("应用角色关联")
@@ -108,7 +111,7 @@ class AppRoleLink {
 	var uid 	= ""
 	var role 	= ""
 
-	fun roleList() = role.split(COMMA).map { it.trim() }
+	fun roleList() 	= H.splitToList(role)
 }
 
 

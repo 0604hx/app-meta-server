@@ -30,6 +30,8 @@ public class UserFilter implements AsyncHandlerInterceptor {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
+    public static final String LOGIN_REQUIRED = "LOGIN REQUIRED";
+
     @Resource
     AuthHolder authHolder;
     @Resource
@@ -105,9 +107,9 @@ public class UserFilter implements AsyncHandlerInterceptor {
 
         final AuthUser user = userLoader.from(request.getHeader(config.getTokenName()));
         if(user == null){
-            logger.info("[NOT LOGIN] {} 匿名请求 {}", ip, uri);
+            logger.info("[{}] {} 匿名请求 {}", LOGIN_REQUIRED, ip, uri);
             response.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-            response.getWriter().write(JSON.toJSONString(Result.fail("NOT LOGIN")));
+            response.getWriter().write(JSON.toJSONString(Result.fail(LOGIN_REQUIRED)));
             return false;
         }
 

@@ -35,7 +35,8 @@ class Terminal {
     var language= ""
     var port    = 0
     var url     = ""
-    var args    = ""    //应用启动参数
+    var args    = ""                //应用启动参数
+    var publics = listOf<String>()  //公开访问的地址
 
     // 数据库相关
     var useDB   = false

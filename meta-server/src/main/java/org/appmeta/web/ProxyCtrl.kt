@@ -19,14 +19,17 @@ import org.appmeta.domain.TerminalLogDetailMapper
 import org.appmeta.service.AppRoleService
 import org.appmeta.service.LogAsync
 import org.appmeta.service.TerminalService
+import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.module.setting.SettingService
+import org.nerve.boot.web.filter.UserFilter
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.springframework.util.AntPathMatcher
 import org.springframework.util.StreamUtils
 import org.springframework.util.StringUtils.hasText
 import org.springframework.web.bind.annotation.PathVariable
@@ -90,7 +93,8 @@ class ProxyService(
     )
 
     fun checkAuth(aid: String, user:AuthUser, url:String) {
-        if(!appRoleService.checkAuth(aid, user.id, url)) throw Exception("${user.id} 未授权访问应用[$aid]的 $url")
+        if(!appRoleService.checkAuth(aid, user, url))
+            throw Exception("${user.id} 未授权访问应用[$aid]的 $url")
     }
 }
 
@@ -103,15 +107,30 @@ class ProxyCtrl(
     private val logAsync: LogAsync,
     private val terminalS:TerminalService) : CommonCtrl(){
 
+    private val matcher = AntPathMatcher()
+
     @RequestMapping("service/{aid}/**", name = "应用后台服务")
     fun redirect(@PathVariable aid:String, response:HttpServletResponse):ResponseEntity<*> {
         val path = request.servletPath.replace("/service/${aid}", "")
 
         val terminal = terminalS.load(aid) ?: throw Exception("应用[$aid]未开通后端服务")
 
-        val user = authHolder.get()
+        val isPublic = terminal.publics.any { matcher.match(it, path) }
+
+        var user = authHolder.get()
+        if(user == null){
+            if(isPublic){
+                if(logger.isDebugEnabled)   logger.debug("应用[$aid] $path 允许匿名访问...")
+                user = AuthUser(EMPTY, "匿名", requestIP)
+            }
+            else {
+                logger.info("拦截来自 $requestIP 的匿名访问：应用#$aid $path")
+                return ResponseEntity.ok(Result.fail(UserFilter.LOGIN_REQUIRED))
+            }
+        }
         //判断是否具备访问权限
-        service.checkAuth(aid, user, path)
+        if(!isPublic)
+            service.checkAuth(aid, user, path)
 
         val host = if(terminal.mode == Terminal.OUTSIDE) terminal.url else "${settingS.value(S.SYS_TERMINAL_HOST)}:${terminal.port}"
 
@@ -137,6 +156,7 @@ class ProxyCtrl(
 
         return try{
             val requestBody = StreamUtils.copyToByteArray(request.inputStream)
+
             if(logDetail != null){
                 logDetail.reqHeader = settingS.valueOfList(S.TERMINAL_HEADER)
                     .let { validNames->
