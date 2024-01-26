@@ -1,7 +1,11 @@
 package org.appmeta.tool
 
+import org.apache.commons.compress.archivers.ArchiveEntry
+import org.apache.commons.compress.archivers.ArchiveInputStream
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.input.ReversedLinesFileReader
+import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -61,11 +65,12 @@ object FileTool {
                 throw RuntimeException("$target 必须是目录")
         }
 
-        ZipInputStream(FileInputStream(zipFile)).use { zipIs->
+//        ZipInputStream(FileInputStream(zipFile)).use { zipIs->
+        ArchiveStreamFactory().createArchiveInputStream(BufferedInputStream(FileInputStream(zipFile))).use { zipIs->
             val trace = mutableListOf<String>()
             val targetFolder = target.toFile()
 
-            var entry: ZipEntry? = zipIs.nextEntry
+            var entry: ArchiveEntry? = zipIs.nextEntry
             while(entry!=null){
                 val file = File(targetFolder, entry.name)
                 if(!file.parentFile.exists())   file.parentFile.mkdirs()
@@ -85,7 +90,6 @@ object FileTool {
                     }
                 }
 
-                zipIs.closeEntry()
                 entry = zipIs.nextEntry
             }
 

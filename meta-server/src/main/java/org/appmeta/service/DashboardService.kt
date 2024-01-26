@@ -74,7 +74,7 @@ class DashboardService(
             pageM
                 .selectMaps(QueryWrapper<Page>().select("$TEMPLATE as $LABEL", "count(*) as $VALUE").groupBy(TEMPLATE))
                 .associate { Pair(it[LABEL]!!, it[VALUE]) },
-            pageM.selectList(QueryWrapper<Page>().select(NAME, F.LAUNCH).orderByDesc(F.LAUNCH).last("LIMIT 10"))
+            pageM.selectList(QueryWrapper<Page>().select(NAME, LAUNCH).orderByDesc(LAUNCH).last("LIMIT 10"))
                 .associate { Pair(it.name, it.launch) },
            mapOf(
                "started"    to DateUtil.formatDate(Date(ManagementFactory.getRuntimeMXBean().startTime), "MM-dd HH:mm"),

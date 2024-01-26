@@ -105,7 +105,7 @@ class ProxyCtrl(
     private val service: ProxyService,
     private val route: ServiceRoute,
     private val logAsync: LogAsync,
-    private val terminalS:TerminalService) : CommonCtrl(){
+    private val terminalS:TerminalService) : AnonymousAbleCtrl(){
 
     private val matcher = AntPathMatcher()
 
@@ -117,7 +117,7 @@ class ProxyCtrl(
 
         val isPublic = terminal.publics.any { matcher.match(it, path) }
 
-        var user = authHolder.get()
+        var user = getUserOrNull()
         if(user == null){
             if(isPublic){
                 if(logger.isDebugEnabled)   logger.debug("应用[$aid] $path 允许匿名访问...")
