@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO
 import org.appmeta.Caches
 import org.appmeta.F
-import org.appmeta.SERVER
+import org.appmeta.component.AppConfig
 import org.appmeta.domain.*
 import org.appmeta.model.TerminalLogModel
 import org.appmeta.model.TerminalLogOverview
@@ -15,8 +15,12 @@ import org.nerve.boot.db.service.QueryHelper
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 import org.springframework.util.StringUtils.hasText
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
+import kotlin.io.path.exists
 
 
 /*
@@ -32,8 +36,10 @@ import java.util.*
 
 @Service
 class TerminalService(
+    private val config:AppConfig,
     private val detailM:TerminalLogDetailMapper,
     private val logM:TerminalLogMapper, private val pageM:PageMapper) {
+
     private val logger = LoggerFactory.getLogger(javaClass)
     private val queryHelper = QueryHelper<TerminalLog>()
 
@@ -42,7 +48,7 @@ class TerminalService(
      */
     fun checkPortUsable(aid:String, port:Int): Boolean {
         val terminals = pageM.selectObjs<String>(
-                QueryWrapper<Page>().eq(F.TEMPLATE, SERVER).ne(F.AID, aid).select(F.CONTENT)
+                QueryWrapper<Page>().eq(F.TEMPLATE, Page.SERVER).ne(F.AID, aid).select(F.CONTENT)
             )
             .map { JSON.parseObject(it.toString(), Terminal::class.java) }
 
@@ -50,14 +56,17 @@ class TerminalService(
     }
 
     @Cacheable(Caches.PAGE_SERVER)
-    fun load(aid: String): Terminal? {
-        val page = pageM.selectOne(
-            QueryWrapper<Page>()
-                .eq(F.TEMPLATE, SERVER)
-                .eq(F.AID, aid).select(F.CONTENT, F.ID)
-        )
+    fun load(aid: String): Terminal {
+        val page = loadServer(aid, true)
+        return JSON.parseObject(page.content, Terminal::class.java).also {  it.pid = "${page.id}" }
+    }
 
-        return JSON.parseObject(page.content, Terminal::class.java)?.also {  it.pid = "${page.id}" }
+    fun loadServer(aid: String, withContent:Boolean = false): Page {
+        val q = QueryWrapper<Page>().eq(F.AID, aid).eq(F.TEMPLATE, Page.SERVER)
+        if(withContent)
+            q.select(F.CONTENT, F.ID)
+
+        return pageM.selectOne(q)?: throw Exception("应用[${aid}]未开通后端服务或者未初始化")
     }
 
     fun logList(params:Map<String, Any>, pagination: Pagination, aid:String=EMPTY, pid:String= EMPTY): List<TerminalLog> {
@@ -121,4 +130,16 @@ class TerminalService(
             q.last("LIMIT 1")
         }
     )
+
+    fun resolvePath(aid:String, dir:String): Path {
+        val p = if(hasText(dir)) dir else ""
+        val root = Paths.get(config.terminalPath, aid)
+        val path = root.resolve(p)
+
+        if(!path.startsWith(root))    throw Exception("非法路径 $p")
+
+        if(!path.exists())  throw Exception("应用#${aid}不存在文件/目录：$path")
+
+        return path
+    }
 }

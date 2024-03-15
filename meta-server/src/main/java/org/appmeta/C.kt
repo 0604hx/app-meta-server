@@ -7,7 +7,6 @@ import org.nerve.boot.util.DateUtil
 const val URL_ALL   = "/**"
 const val ALL       = "**"
 const val ANY       = "*"
-const val SERVER    = "server"
 val IS_WINDOW       = System.getProperty("os.name").uppercase().contains("WINDOW")
 
 object Channels {
@@ -24,6 +23,7 @@ object F {
     const val PID       = "pid"
     const val UID       = "uid"
     const val OID       = "oid"
+    const val PATH      = "path"
     const val UNAME     = "uname"
     const val NAME      = "name"
     const val SUMMARY   = "summary"

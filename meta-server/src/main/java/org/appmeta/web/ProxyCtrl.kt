@@ -113,7 +113,7 @@ class ProxyCtrl(
     fun redirect(@PathVariable aid:String, response:HttpServletResponse):ResponseEntity<*> {
         val path = request.servletPath.replace("/service/${aid}", "")
 
-        val terminal = terminalS.load(aid) ?: throw Exception("应用[$aid]未开通后端服务")
+        val terminal = terminalS.load(aid)
 
         val isPublic = terminal.publics.any { matcher.match(it, path) }
 

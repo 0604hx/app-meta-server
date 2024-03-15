@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank
 import org.apache.ibatis.annotations.Mapper
 import org.apache.ibatis.annotations.Param
 import org.apache.ibatis.annotations.Select
+import org.apache.ibatis.annotations.Update
 import org.appmeta.Caches
 import org.appmeta.H
 import org.appmeta.Role
@@ -158,6 +159,9 @@ interface AppMapper:BaseMapper<App> {
 	@Cacheable(Caches.APP)
 	@Select("SELECT * FROM app WHERE id=#{0}")
 	fun withCache(id: Serializable):App?
+
+	@Update("UPDATE app SET launch=launch+#{size} WHERE id=#{id}")
+	fun updateLaunch(@Param("id") id: Serializable, @Param("size") size:Int)
 }
 
 @Mapper

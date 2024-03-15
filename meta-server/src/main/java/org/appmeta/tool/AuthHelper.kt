@@ -1,9 +1,8 @@
 package org.appmeta.tool
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper
-import org.appmeta.ALL
-import org.appmeta.F
-import org.appmeta.Role
+import jakarta.annotation.Resource
+import org.appmeta.*
 import org.appmeta.component.AppConfig
 import org.appmeta.domain.Account
 import org.appmeta.domain.AccountMapper
@@ -12,6 +11,7 @@ import org.appmeta.domain.ServiceAuthable
 import org.nerve.boot.Const
 import org.nerve.boot.cache.CacheManage
 import org.nerve.boot.domain.AuthUser
+import org.nerve.boot.module.setting.SettingService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -26,7 +26,10 @@ import org.springframework.stereotype.Component
  */
 
 @Component
-class AuthHelper (private val config: AppConfig, private val accountM: AccountMapper) {
+class AuthHelper (
+    private val settingS:SettingService,
+    private val config: AppConfig,
+    private val accountM: AccountMapper) {
 
     private val logger = LoggerFactory.getLogger(AuthHelper::class.java)
 
@@ -70,4 +73,15 @@ class AuthHelper (private val config: AppConfig, private val accountM: AccountMa
     fun checkService(auth:ServiceAuthable, user: AuthUser) = checkService(auth.serviceAuth, auth.uid, user)
 
     fun checkEdit(auth:EditAuthable, user: AuthUser) = checkService(auth.editAuth, auth.uid, user)
+
+    /**
+     * 判断管理员是否在指定的设备进行操作
+     */
+    fun checkAdminAndWhiteIP(user: AuthUser) {
+        val whiteIps = settingS.value(S.SYS_WHITE_IP)?.split(Const.COMMA)?: emptyList()
+        if(H.hasAnyRole(user, Role.ADMIN, Role.SYS_ADMIN) && whiteIps.contains(user.ip))
+            return
+
+        throw Exception("该功能需要 ${Role.ADMIN}/${Role.SYS_ADMIN} 在特定设备下执行")
+    }
 }

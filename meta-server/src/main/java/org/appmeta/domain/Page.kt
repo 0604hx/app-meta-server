@@ -30,6 +30,7 @@ class Page : AppWithUser, Authable, Launchable {
         const val MARKDOWN  = "markdown"
         const val ROBOT     = "robot"
         const val FAAS      = "faas"
+        const val SERVER    = "server"
     }
 
     var name        = ""

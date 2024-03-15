@@ -2,6 +2,8 @@ package org.appmeta.web.page
 
 import com.alibaba.fastjson2.JSON
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.websocket.*
+import jakarta.websocket.CloseReason.CloseCodes
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.appmeta.F
@@ -9,24 +11,28 @@ import org.appmeta.H
 import org.appmeta.Role
 import org.appmeta.component.AppConfig
 import org.appmeta.component.deploy.Deployer
-import org.appmeta.domain.AppVersion
-import org.appmeta.domain.AppVersionMapper
-import org.appmeta.domain.TerminalLog
-import org.appmeta.domain.TerminalLogMapper
+import org.appmeta.domain.*
 import org.appmeta.model.*
 import org.appmeta.service.TerminalService
+import org.appmeta.tool.AuthHelper
 import org.appmeta.tool.FileTool
 import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.FileStore
 import org.nerve.boot.Result
+import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.module.operation.Operation
+import org.nerve.boot.util.DateUtil
+import org.nerve.boot.web.auth.AuthHolder
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.Assert
 import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.socket.WebSocketSession
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.*
 
 @RestController
@@ -38,24 +44,22 @@ class SupportTerminalCtrl (
     private val deployer: Deployer,
     private val service: TerminalService, private val logM:TerminalLogMapper):BasicPageCtrl() {
 
-    private fun _load(aid: String) = service.load(aid)?: throw Exception("应用[${aid}]未开通后端服务或者未初始化")
-
     @PostMapping("overview", name = "后端服务运行状态")
-    fun overview(@RequestBody model: IdStringModel) = _checkEditResult(_load(model.id).pid) { _, _->
+    fun overview(@RequestBody model: IdStringModel) = _checkEditResult(service.load(model.id).pid) { _, _->
         deployer.overview().find { it.name == model.id }
     }
 
     @PostMapping("restart", name = "重启后端服务")
-    fun restart(@RequestBody model: IdStringModel) = _checkEditResult(_load(model.id).pid) { _, _->
+    fun restart(@RequestBody model: IdStringModel) = _checkEditResult(service.load(model.id).pid) { _, _->
         deployer.restart(model.id)
     }
 
     @PostMapping("stop", name = "停止后端服务")
-    fun stop(@RequestBody model: IdStringModel) = _checkEditResult(_load(model.id).pid) { _, _->
+    fun stop(@RequestBody model: IdStringModel) = _checkEditResult(service.load(model.id).pid) { _, _->
         deployer.stop(model.id)
     }
 
-    private fun _prepareLogDetail(log: TerminalLog) =  _checkServiceAuth(_load(log.aid).pid) { _, _ ->
+    private fun _prepareLogDetail(log: TerminalLog) =  _checkServiceAuth(service.load(log.aid).pid) { _, _ ->
         TerminalDetailResult(
             log,
             service.loadLogDetail(log.id)
@@ -77,7 +81,7 @@ class SupportTerminalCtrl (
     }
 
     @RequestMapping("trace-{aid}", name = "按应用查询后端服务记录")
-    fun logList(@RequestBody model: QueryModel, @PathVariable aid:String) = _checkEditAuth(_load(aid).pid) {_, _ ->
+    fun logList(@RequestBody model: QueryModel, @PathVariable aid:String) = _checkEditAuth(service.load(aid).pid) {_, _ ->
         Result().also {
             println(JSON.toJSONString(model))
             var pid = EMPTY
@@ -109,7 +113,7 @@ class SupportTerminalCtrl (
         val ext = FilenameUtils.getExtension(file.originalFilename)
         Assert.isTrue(VALID_EXTS.contains(ext), "仅支持 $VALID_EXTS 格式（当前为 $ext）")
 
-        val terminal = _load(page.aid)
+        val terminal = service.load(page.aid)
 
         deployer.checkRequirement()
 
@@ -161,19 +165,10 @@ class SupportTerminalCtrl (
      */
     @PostMapping("file", name = "显示部署目录结构或下载文件")
     fun directoryOrDownload(@RequestBody model:FieldModel, response: HttpServletResponse):Unit =
-        _checkServiceAuth(_load(model.id as String).pid) { page, user ->
-            val path = model.key.let { dir->
-                val p = if(StringUtils.hasText(dir)) dir else ""
-                val root = Paths.get(config.terminalPath, page.aid)
-                logger.info("${user.showName} 尝试访问 应用#${page.aid} 的文件 $p")
-                val target = root.resolve(p)
+        _checkServiceAuth(service.load(model.id as String).pid) { page, user ->
+            val path = service.resolvePath(page.aid, model.key)
 
-                if(!target.startsWith(root))    throw Exception("非法路径 $p")
-
-                target
-            }
-            if(!path.exists())  throw Exception("应用#${page.aid}不存在文件/目录：$path")
-
+            logger.info("${user.showName} 尝试访问 应用#${page.aid} 的文件 ${model.key}")
             val isFile = path.isRegularFile()
 
             when (model.value) {
@@ -204,4 +199,75 @@ class SupportTerminalCtrl (
                 }
             }
         }
+}
+
+//@Component
+//@ServerEndpoint("/page/terminal/ws")
+class TerminalWebsocket {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    lateinit var user:AuthUser
+    lateinit var session: Session
+    lateinit var file:String
+
+    companion object {
+        lateinit var authHelper: AuthHelper
+        lateinit var authHolder: AuthHolder
+        lateinit var appM:AppMapper
+
+        private val clients = ConcurrentHashMap<String, WebSocketSession>()
+    }
+
+    @Autowired
+    fun setAuthHelper(authHelper: AuthHelper){
+        println("----------------------------------authHelper")
+        TerminalWebsocket.authHelper = authHelper
+    }
+
+    @Autowired
+    fun setAuthHolder(authHolder: AuthHolder){
+        println("----------------------------------authHolder")
+        TerminalWebsocket.authHolder = authHolder
+    }
+
+    @OnOpen
+    fun onOpen(session:Session){
+        this.user = authHolder.get()
+        this.session = session
+
+        logger.info("创建连接：${session.id} class=${hashCode()} user=${user.showName} ${appM}")
+        session.basicRemote.sendText("你好，${DateUtil.getDateTime()}")
+    }
+
+    @OnClose
+    fun onClose(){
+        logger.info("关闭连接：${session.id} class=${hashCode()}")
+    }
+
+    @OnMessage
+    fun onText(text:String){
+        if(logger.isDebugEnabled)   logger.debug("收到客户端消息 $text")
+
+        try{
+            JSON.parseObject(text).let { json->
+                val path = json.getString(F.PATH)
+                val aid = json.getString(F.AID)
+            }
+        }catch (e:Exception){
+            logger.error("处理客户端消息失败", e)
+            session.close(CloseReason(CloseCodes.CANNOT_ACCEPT, e.message))
+        }
+    }
+
+//    override fun afterConnectionEstablished(session: WebSocketSession) {
+//        logger.info("创建连接：${session.id}")
+//
+//        session.sendMessage(TextMessage("${DateUtil.getDateTime()}"))
+//    }
+//
+//    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+//        logger.info("WS 连接断开：${session.id}")
+//
+//        clients.remove(session.id)
+//    }
 }

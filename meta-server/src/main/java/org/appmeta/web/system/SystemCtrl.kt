@@ -9,6 +9,7 @@ import org.appmeta.*
 import org.appmeta.component.SystemConfig
 import org.appmeta.model.FieldModel
 import org.appmeta.model.SizeModel
+import org.appmeta.tool.AuthHelper
 import org.appmeta.tool.FileTool
 import org.nerve.boot.Const.COMMA
 import org.nerve.boot.FileStore
@@ -46,15 +47,13 @@ import java.nio.file.StandardCopyOption
 
 open class BasicSystemCtrl:BasicController() {
     @Resource
-    protected lateinit var settingS:SettingService
+    protected lateinit var authHelper: AuthHelper
 
     fun adminAndWhiteIP(): AuthUser {
         val user = authHolder.get()
-        val whiteIps = settingS.value(S.SYS_WHITE_IP)?.split(COMMA)?: emptyList()
-        if(H.hasAnyRole(user, Role.ADMIN, Role.SYS_ADMIN) && whiteIps.contains(requestIP))
-            return user
+        authHelper.checkAdminAndWhiteIP(user)
 
-        throw Exception("该功能需要 ${Role.ADMIN}/${Role.SYS_ADMIN} 在特定设备下执行")
+        return user
     }
 }
 

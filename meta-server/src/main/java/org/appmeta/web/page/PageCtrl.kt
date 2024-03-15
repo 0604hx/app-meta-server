@@ -7,11 +7,11 @@ import org.apache.commons.io.FileUtils
 import org.appmeta.Channels.MOBILE
 import org.appmeta.F
 import org.appmeta.Role
-import org.appmeta.SERVER
 import org.appmeta.component.PageContentUpdateEvent
 import org.appmeta.component.PageDeleteEvent
 import org.appmeta.component.PageNameUpdateEvent
 import org.appmeta.domain.*
+import org.appmeta.domain.Page.Companion.SERVER
 import org.appmeta.model.*
 import org.appmeta.service.*
 import org.nerve.boot.Result

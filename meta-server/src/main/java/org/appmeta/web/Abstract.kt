@@ -2,7 +2,6 @@ package org.appmeta.web
 
 import jakarta.annotation.Resource
 import org.appmeta.component.AppConfig
-import org.appmeta.service.AccountHelper
 import org.nerve.boot.web.auth.AuthConfig
 import org.nerve.boot.web.auth.UserLoader
 import org.nerve.boot.web.ctrl.BasicController

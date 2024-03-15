@@ -11,9 +11,13 @@ import org.nerve.boot.Const.EMPTY
 import org.nerve.boot.module.setting.Setting
 import org.nerve.boot.module.setting.SettingService
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 import kotlin.math.abs
 
 
@@ -116,8 +120,27 @@ class SystemAsync(private val accountS:AccountService,private val settingS:Setti
 }
 
 @Service
-class LogAsync(private val logM:TerminalLogMapper, private val logDetailM:TerminalLogDetailMapper) {
+class LogAsync(
+    private val appM:AppMapper,
+    private val logM:TerminalLogMapper,
+    private val logDetailM:TerminalLogDetailMapper
+) {
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    private val counter = ConcurrentHashMap<String, Int>()
+
+    @Scheduled(fixedDelay = 2*60*1000)
+    protected fun cleanCount() {
+        if(counter.isEmpty())   return
+
+        /*
+        热度只同步到 App，避免对应的 Page（后端服务） 因热度过高进入排行榜
+         */
+        counter.forEach { (id, v) -> appM.updateLaunch(id, v) }
+        logger.info("同步应用热度 $counter")
+
+        counter.clear()
+    }
 
     @Async
     fun save(log: TerminalLog, detail: TerminalLogDetail?=null){
@@ -129,7 +152,15 @@ class LogAsync(private val logM:TerminalLogMapper, private val logDetailM:Termin
         if(logger.isDebugEnabled)   logger.debug("记录后端/FaaS日志 ${log.url} (${log.used} ms) 保存详情=${detail != null}")
 
         logM.insert(log)
-        if(detail != null)
+
+        if(log.code != HttpStatus.INTERNAL_SERVER_ERROR.value()){
+            // 对应的应用热度+1
+            counter[log.aid] = counter.getOrDefault(log.aid, 0)+1
+        }
+
+        if(detail != null){
+            detail.id = log.id
             logDetailM.insert(detail)
+        }
     }
 }
