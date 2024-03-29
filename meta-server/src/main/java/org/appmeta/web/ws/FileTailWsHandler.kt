@@ -11,6 +11,7 @@ import org.appmeta.F
 import org.appmeta.domain.PageMapper
 import org.appmeta.service.TerminalService
 import org.appmeta.tool.AuthHelper
+import org.nerve.boot.Const
 import org.nerve.boot.domain.AuthUser
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -21,6 +22,7 @@ import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.io.File
 import java.io.RandomAccessFile
+import java.nio.charset.Charset
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -39,7 +41,12 @@ import kotlin.io.path.name
  * --------------------------------------------------------------
  */
 
-class FileTail(val path:Path, val handler: Consumer<String>, delay:Long=1000): FileAlterationListenerAdaptor() {
+class FileTail(
+    val path:Path,
+    val handler: Consumer<String>,
+    val charset: Charset=Charsets.UTF_8,
+    delay:Long=1000
+): FileAlterationListenerAdaptor() {
 
     private val watcher = FileSystems.getDefault().newWatchService()
 
@@ -76,7 +83,7 @@ class FileTail(val path:Path, val handler: Consumer<String>, delay:Long=1000): F
 
         position += bytes.size
 
-        handler.accept(String(bytes.toByteArray()))
+        handler.accept(String(bytes.toByteArray(), charset))
     }
 
     fun stop() {
@@ -132,7 +139,8 @@ class FileTailWsHandler(
             // 加入队列
             monitors[session.id] = FileTail(
                 textFile,
-                { text -> session.sendMessage(TextMessage(text)) }
+                { text -> session.sendMessage(TextMessage(text)) },
+                Charset.forName(json.getOrDefault("charset", "UTF-8").toString())
             )
         }catch (e:Exception){
             logger.error("处理客户端消息失败", e)

@@ -2,6 +2,7 @@ package org.appmeta.component.deploy
 
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
+import com.alibaba.fastjson2.JSONWriter
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
@@ -63,7 +64,8 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
         if(Files.notExists(dir))
             Files.createDirectories(dir)
 
-        if(codeFile.extension.uppercase() == "ZIP") {
+        val isZip = codeFile.extension.uppercase() == "ZIP"
+        if(isZip) {
             // 如果是压缩文件，则解压到 dir 目录下
             FileTool.unzip(codeFile, dir, if(config.terminalZipOver) UNZIP_OVERWRITE else UNZIP_SKIP_ON_EXIST)
         }
@@ -79,7 +81,11 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
         //写入配置文件
         val configFile = dir.resolve(config.terminalConfig)
         FileOutputStream(configFile.toFile()).use {
-            IOUtils.write(JSON.toJSONString(terminal), it, Charsets.UTF_8)
+            IOUtils.write(
+                JSON.toJSONString(terminal, JSONWriter.Feature.PrettyFormat),
+                it,
+                Charsets.UTF_8
+            )
             logger.info("${name()} 写入配置文件 ${config.terminalConfig}")
         }
         //创建 pm2 的 config.js
@@ -89,7 +95,7 @@ class LocalPm2Deployer(private val config: AppConfig):Deployer {
 
             FileOutputStream(startFile.toFile()).use {
                 val script = when(terminal.language){
-                    LANG_NODE   -> codeFile.name
+                    LANG_NODE   -> if(isZip) "${id}.js" else codeFile.name
                     LANG_JAVA   -> LANG_JAVA
                     else        -> throw Exception("未实现的开发语言[${terminal.language}]")
                 }

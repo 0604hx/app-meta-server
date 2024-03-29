@@ -321,9 +321,9 @@ class AppRoleService(private val roleM:AppRoleMapper, private val linkM:AppRoleL
 
     /**
      * 返回用户在指定应用下的：
-     *  1、角色列表（List）
+     *  1、应用角色列表（List）
      *  2、授权URL
-     *  3、角色列表（String格式，以英文逗号隔开）
+     *  3、用户被分配的角色列表（String格式，以英文逗号隔开）
      */
     fun loadRoleAndAuthOfUser(aid: String, uid: String): Triple<List<String>, List<String>, String> = CacheManage.get(roleCacheKey(aid, uid)) {
         val roles = roleM.selectList(RQ(aid))

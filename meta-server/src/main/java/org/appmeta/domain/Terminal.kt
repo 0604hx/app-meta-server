@@ -44,6 +44,8 @@ class Terminal {
 
     // 数据库相关
     var useDB   = false
+    var useSource = false
+    var dbSource = 0L
     var dbHost  = ""
     var dbPort  = 3306
     var dbName  = ""

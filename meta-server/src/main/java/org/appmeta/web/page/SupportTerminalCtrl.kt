@@ -13,6 +13,7 @@ import org.appmeta.component.AppConfig
 import org.appmeta.component.deploy.Deployer
 import org.appmeta.domain.*
 import org.appmeta.model.*
+import org.appmeta.module.dbm.DatabaseSourceService
 import org.appmeta.service.TerminalService
 import org.appmeta.tool.AuthHelper
 import org.appmeta.tool.FileTool
@@ -21,6 +22,7 @@ import org.nerve.boot.FileStore
 import org.nerve.boot.Result
 import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.module.operation.Operation
+import org.nerve.boot.util.AESProvider
 import org.nerve.boot.util.DateUtil
 import org.nerve.boot.web.auth.AuthHolder
 import org.slf4j.LoggerFactory
@@ -42,6 +44,7 @@ class SupportTerminalCtrl (
     private val versionM:AppVersionMapper,
     private val fileStore: FileStore,
     private val deployer: Deployer,
+    private val dbSourceS:DatabaseSourceService,
     private val service: TerminalService, private val logM:TerminalLogMapper):BasicPageCtrl() {
 
     @PostMapping("overview", name = "后端服务运行状态")
@@ -126,6 +129,18 @@ class SupportTerminalCtrl (
 
         FileUtils.copyToFile(file.inputStream, codeFile)
 
+        if(terminal.useSource && terminal.dbSource>0){
+            //读取数据源
+            dbSourceS.withCache(terminal.dbSource)?.also {source->
+                logger.info("应用#${page.aid}关联数据源#${source.id}|${source.name}，自动填充连接信息")
+                terminal.dbHost = source.host
+                terminal.dbPort = source.port
+                terminal.dbUser = source.username
+                terminal.dbName = source.db
+                terminal.dbPwd  = AESProvider().decrypt(source.pwd, config.dbmKey)
+            }
+        }
+
         deployer.deploy(page.aid, codeFile, terminal)
 
         version.uid  = user.showName
@@ -181,8 +196,10 @@ class SupportTerminalCtrl (
                 }
                 //add on 2023-11-07
                 "delete" -> {
-                    Files.deleteIfExists(path)
+                    val delResult = Files.deleteIfExists(path)
                     opLog("${user.showName} 在 $requestIP 删除应用#${page.aid} 的文件 $path", null, Operation.DELETE)
+                    initResponse(response)
+                    write(response, JSON.toJSONString(Result.ok(delResult)))
                 }
                 else -> {
                     initResponse(response)
