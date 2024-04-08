@@ -197,4 +197,6 @@ object H {
     fun hasAllRole(user: AuthUser, vararg roles: Role) = roles.all { user.hasRole(it) }
 
     fun splitToList(text:String?) = if(text.isNullOrBlank()) emptyList() else text.split(COMMA).map { it.trim() }
+
+    fun wrapText(text:String) = "⌈${text}⌋"
 }

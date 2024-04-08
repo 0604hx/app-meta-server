@@ -16,6 +16,7 @@ import org.nerve.boot.domain.AuthUser
 import org.nerve.boot.exception.ServiceException
 import org.nerve.boot.module.operation.Operation
 import org.springframework.http.HttpStatus
+import org.springframework.util.AntPathMatcher
 import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.*
 import java.io.Serializable
@@ -33,6 +34,7 @@ import java.io.Serializable
 @RestController
 @RequestMapping("app")
 class AppCtrl(
+    private val terminalS: TerminalService,
     private val refresh: CacheRefresh,
     private val appAsync: AppAsync,
     private val pageM:PageMapper,
@@ -192,11 +194,18 @@ class AppCtrl(
 
     @PostMapping("role/check", name = "检测用户对指定URL的访问权限")
     fun checkRoleAuth(@RequestBody model:AppRole) = resultWithData {
-        roleS.checkAuth(
-            model.aid,
-            AuthUser(model.uuid, EMPTY, model.ip),
-            model.auth
-        )
+        val terminal = terminalS.load(model.aid)
+        val matcher = AntPathMatcher()
+
+        if(terminal.publics.any { matcher.match(it, model.auth) }) {
+            if(logger.isDebugEnabled)   logger.debug("${H.wrapText(model.aid)}的资源 ${model.auth} 为公开访问")
+            "true（授权依据：资源公开）"
+        } else
+            roleS.checkAuth(
+                model.aid,
+                AuthUser(model.uuid, EMPTY, model.ip),
+                model.auth
+            )
     }
 
     @PostMapping("role/link", name = "分配应用角色到用户")

@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.appmeta.F
+import org.appmeta.H
 import org.appmeta.S
 import org.appmeta.S.SYS_TERMINAL_HEADER_VALUE
 import org.appmeta.component.AppConfig
@@ -94,7 +95,7 @@ class ProxyService(
 
     fun checkAuth(aid: String, user:AuthUser, url:String) {
         if(!appRoleService.checkAuth(aid, user, url))
-            throw Exception("${user.id} 未授权访问应用[$aid]的 $url")
+            throw Exception("用户 ${user.id} 未授权访问应用${H.wrapText(aid)}的资源 $url")
     }
 }
 

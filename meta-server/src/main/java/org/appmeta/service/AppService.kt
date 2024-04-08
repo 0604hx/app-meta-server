@@ -240,6 +240,9 @@ class AppRoleService(private val roleM:AppRoleMapper, private val linkM:AppRoleL
         //判断是否存在重复
         Assert.isTrue(roleM.selectCount(RQ(role.aid, role.uuid)) <= 0L, "应用（${role.aid}）下已存在角色${role.uuid}")
 
+        if(role.addOn <=0)
+            role.addOn = System.currentTimeMillis()
+
         roleM.insert(role)
         logger.info("新增应用（${role.aid}）角色：${role.uuid}/${role.name}-${role.summary}")
 
