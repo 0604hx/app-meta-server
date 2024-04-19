@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
+import kotlin.math.ceil
 
 
 /*
@@ -137,7 +138,7 @@ class LogAsync(
         同时，接口调用转化为应用热度有一定的折算（默认是 5 分之一）
          */
         counter.forEach { (id, v) ->
-            appM.updateLaunch(id, v / 5)
+            appM.updateLaunch(id, ceil(v / 5.0).toInt())
         }
         logger.info("同步应用热度 $counter")
 

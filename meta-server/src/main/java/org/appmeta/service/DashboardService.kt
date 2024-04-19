@@ -36,6 +36,7 @@ import java.util.*
 
 @Service
 class DashboardService(
+    private val accountS:AccountService,
     private val terminalLogM:TerminalLogMapper,
     private val memberM:MemberMapper,
     private val dbSourceM:DatabaseSourceMapper,
@@ -139,7 +140,11 @@ class DashboardService(
                                 ))
                             }
                         },
-            "topUser"   to launchMapper.selectMaps(groupBy(UID)),
+            "topUser"   to launchMapper.selectMaps(groupBy(UID)).map { v->
+                val id = v[ID] as String
+                v[ID] = "${accountS.getNameById(id)}(${id})"
+                v
+            },
             "topDepart" to launchMapper.selectMaps(groupBy(DEPART)),
             "topPage"   to pageM.selectMaps(
                 QueryWrapper<Page>().also { q->

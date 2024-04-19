@@ -157,6 +157,7 @@ class Auth {
 
 object Caches {
     const val ACCOUNT       = "ACCOUNT"
+    const val ACCOUNT_ID    = "ACCOUNT_ID"
     const val ACCOUNT_ALL   = "ACCOUNT_ALL"
     const val DEPARTMENT    = "DEPARTMENT"
 

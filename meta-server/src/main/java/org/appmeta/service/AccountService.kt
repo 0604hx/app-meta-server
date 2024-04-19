@@ -131,6 +131,9 @@ class AccountService(
     @Cacheable(Caches.ACCOUNT)
     fun listOfAccount() = baseMapper.selectList(null)
 
+    @Cacheable(Caches.ACCOUNT_ID)
+    fun getNameById(id:String) = baseMapper.selectById(id).name
+
     fun listOfDepart() = departS.list()
 
     fun listOfRole() = roleM.selectList(null)
