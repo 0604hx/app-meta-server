@@ -1,6 +1,8 @@
 package org.appmeta.web.page
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper
 import jakarta.annotation.Resource
+import org.appmeta.F
 import org.appmeta.domain.Page
 import org.appmeta.domain.PageMapper
 import org.appmeta.service.CacheRefresh
@@ -61,4 +63,9 @@ open class BasicPageCtrl : CommonCtrl() {
 
         throw Exception(HttpStatus.UNAUTHORIZED.name)
     }
+
+    protected fun updateDateById(id:Serializable) = pageM.update(
+        null,
+        UpdateWrapper<Page>().eq(F.ID, id).set(F.UPDATE_ON, System.currentTimeMillis())
+    )
 }

@@ -31,7 +31,9 @@ class SupportH5Ctrl(
         version.uid = user.id
 
         opLog("部署前端资源#${version.aid} ${version.version} ${version.summary}", version, Operation.IMPORT)
-        service.saveVersionFile(version, file.inputStream)
+        service.saveVersionFile(version, file.inputStream).also {
+            updateDateById(version.pid)
+        }
     }
 
     @RequestMapping("list", name = "版本列表（MAIN/小程序页面）")

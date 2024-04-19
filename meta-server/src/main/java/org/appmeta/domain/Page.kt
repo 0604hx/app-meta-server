@@ -39,6 +39,7 @@ class Page : AppWithUser, Authable, Launchable {
     var active      = false
     var search      = true
     override var launch = 0
+    var updateOn    = 0L
     var addOn       = 0L
 
     @TableField(select = false, updateStrategy = FieldStrategy.NEVER)

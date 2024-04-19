@@ -278,7 +278,7 @@ class PageCtrl(
             null,
             UpdateWrapper<Page>().eq(F.ID, model.id)
                 .set(F.CONTENT, model.value)
-                .set(F.ADD_ON, System.currentTimeMillis())
+                .set(F.UPDATE_ON, System.currentTimeMillis())
         )
         // 刷新后端服务配置
         if(page.template == SERVER) cacheRefresh.pageServer(page.aid)

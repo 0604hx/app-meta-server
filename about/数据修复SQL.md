@@ -1,6 +1,13 @@
 # 数据修复 SQL 汇总
 > 每次数据表结构变更，可能会导致数据缺失，此时需要用程序或者 SQL 进行调整
 
+**页面增加更新日期字段**
+> on 2024-04-19
+
+```sql
+ALTER TABLE data ADD updateOn BIGINT NULL AFTER content;
+```
+
 **Member表增加密钥对**
 > on 2023-10-19
 

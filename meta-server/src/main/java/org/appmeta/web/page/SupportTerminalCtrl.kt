@@ -151,6 +151,8 @@ class SupportTerminalCtrl (
         version.addOn = System.currentTimeMillis()
 
         versionM.insert(version)
+
+        updateDateById(page.id)
     }
 
     /**
