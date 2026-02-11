@@ -70,7 +70,7 @@ class DocumentService(private val fileStore: FileStore) : BaseService<DocumentMa
     fun overwrite(model:PageModel, fis: InputStream, originName: String):Document {
         val doc = getById(model.id)?: throw Document404Exception(model.id)
         Assert.isTrue(doc.pid == model.pid, "文档#${model.id} 归属 pid 不匹配")
-        Assert.isTrue(doc.ext == FilenameUtils.getExtension(originName), "文件类型不一致")
+        Assert.isTrue(doc.ext.equals(FilenameUtils.getExtension(originName), true), "文件类型不一致")
 
         FileUtils.copyToFile(fis, Paths.get(doc.path).toFile())
         return doc

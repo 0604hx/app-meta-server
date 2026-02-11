@@ -4,10 +4,12 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.nerve.boot.Result;
+import org.nerve.boot.web.auth.AuthConfig;
 import org.nerve.boot.web.auth.AuthHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +24,8 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 public class ExceptionAdvice {
 
     @Resource
+    AuthConfig config;
+    @Resource
     private AuthHolder holder;
     private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -29,7 +33,10 @@ public class ExceptionAdvice {
     @ExceptionHandler
 //    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result handler(HttpServletRequest request, Exception e){
-
+        // 不处理附件资源的异常（通常是 你的主机中的软件中止了一个已建立的连接）
+        if(HttpMethod.GET.matches(request.getMethod()) && request.getServletPath().startsWith("/"+config.getAttachDir()+"/")){
+            return null;
+        }
 
 //        val trace           = Trace.of(request, holder.get())
 //        trace.path          = request.servletPath
