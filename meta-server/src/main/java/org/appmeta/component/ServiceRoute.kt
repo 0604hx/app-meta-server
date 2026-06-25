@@ -119,7 +119,7 @@ class ServiceRoute {
     /**
      * 复制原始请求的 header 信息
      */
-    private fun parseRequestHeader(request: HttpServletRequest): MultiValueMap<String, String?> {
+    private fun parseRequestHeader(request: HttpServletRequest): HttpHeaders {
         val headers = HttpHeaders()
         val headerNames: List<String> = Collections.list(request.headerNames)
         for (headerName in headerNames) {

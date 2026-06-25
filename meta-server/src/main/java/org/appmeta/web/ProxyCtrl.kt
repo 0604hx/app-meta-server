@@ -165,7 +165,12 @@ class ProxyCtrl(
 
             //记录响应值
             val resHeaders = mutableMapOf<String, Any?>()
-            resEntity.headers.mapKeys { h-> resHeaders[h.key.lowercase()] = h.value.first() }
+            // spring boot 4.x 以下的写法
+            // resEntity.headers.mapKeys { h-> resHeaders[h.key.lowercase()] = h.value.first() }
+            for(key in resEntity.headers.headerNames()) {
+                resHeaders[key] = resEntity.headers.getFirst(key)
+            }
+
             //判断是否有响应日志
             settingS.value(S.TERMINAL_LOG_HEADER).also { h->
                 if(resHeaders.containsKey(h) && resHeaders[h] is String){
